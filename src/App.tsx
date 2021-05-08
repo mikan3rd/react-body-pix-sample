@@ -10,15 +10,35 @@ const height = 480;
 const App: React.VFC = () => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  const requestAnimationIdRef = React.useRef<number | null>(null);
+
   const bodyPixNetRef = React.useRef<bodyPix.BodyPix | null>(null);
 
-  const [mediaStream, setMediaStream] = React.useState<MediaStream | null>(null);
+  // mediaStreamRef ... requestAnimationFrame内で使用するため必要
+  // mediaStreamState ... ON/OFFに切り替えをレンダリングに反映するために必要
+  const mediaStreamRef = React.useRef<MediaStream | null>(null);
+  const [mediaStreamState, setMediaStreamState] = React.useState<MediaStream | null>(null);
 
+  // 上記のコメントと同じ理由
   const useBodyPixRef = React.useRef(false);
   const [useBodyPixState, setBodyPixState] = React.useState(false);
 
+  const setMediaStream = (mediaStream: MediaStream | null) => {
+    mediaStreamRef.current = mediaStream;
+    setMediaStreamState(mediaStream);
+  };
+
+  const setBodyPix = (useBodyPix: boolean) => {
+    useBodyPixRef.current = useBodyPix;
+    setBodyPixState(useBodyPix);
+  };
+
   const renderCanvas = async () => {
+    // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
+    // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
+    if (mediaStreamRef.current === null) {
+      return;
+    }
+
     const canvas = canvasRef.current;
     const video = videoRef.current;
     const useBodyPix = useBodyPixRef.current;
@@ -34,8 +54,9 @@ const App: React.VFC = () => {
       }
     }
 
-    const requestId = requestAnimationFrame(await renderCanvas);
-    requestAnimationIdRef.current = requestId;
+    // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
+    // この場合にも対応したい場合はsetTimeoutを使用する
+    requestAnimationFrame(renderCanvas);
   };
 
   const startVideo = async () => {
@@ -50,26 +71,21 @@ const App: React.VFC = () => {
 
     if (videoRef.current) {
       videoRef.current.srcObject = mediaStream;
+      videoRef.current.addEventListener("loadeddata", async () => {
+        await renderCanvas();
+      });
     }
-
-    await renderCanvas();
   };
 
   const stopVideo = () => {
-    if (mediaStream) {
-      mediaStream.getTracks().forEach((track) => track.stop());
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
       setMediaStream(null);
-    }
-
-    const requestAnimationId = requestAnimationIdRef.current;
-    if (requestAnimationId !== null) {
-      cancelAnimationFrame(requestAnimationId);
-      requestAnimationIdRef.current = null;
     }
   };
 
   const handleChangeVideo = () => {
-    if (mediaStream !== null) {
+    if (mediaStreamRef.current !== null) {
       stopVideo();
     } else {
       startVideo();
@@ -78,12 +94,13 @@ const App: React.VFC = () => {
 
   const handleBodyPix = async () => {
     const useBodyPix = useBodyPixRef.current;
+
     if (!useBodyPix && !bodyPixNetRef.current) {
       const net = await bodyPix.load();
       bodyPixNetRef.current = net;
     }
-    useBodyPixRef.current = !useBodyPix;
-    setBodyPixState(!useBodyPix);
+
+    setBodyPix(!useBodyPix);
   };
 
   return (
@@ -93,7 +110,7 @@ const App: React.VFC = () => {
           margin-top: 12px;
         `}
       >
-        <Checkbox toggle checked={mediaStream !== null} label="Video" onChange={handleChangeVideo} />
+        <Checkbox toggle checked={mediaStreamState !== null} label="Video" onChange={handleChangeVideo} />
       </div>
       <div
         css={css`
