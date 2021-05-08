@@ -29,7 +29,7 @@ const App: React.VFC = () => {
       text
       css={css`
         &&& {
-          margin-top: 12px;
+          padding-top: 12px;
         }
       `}
     >
