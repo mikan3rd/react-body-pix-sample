@@ -15,6 +15,8 @@
   "dependencies": {
     "@emotion/babel-preset-css-prop": "11.2.0",
     "@emotion/react": "11.1.5",
+    "@tensorflow-models/body-pix": "2.2.0",
+    "@tensorflow/tfjs": "^3.6.0",
     "dayjs": "1.10.4",
     "firebase": "8.4.3",
     "immer": "9.0.2",
