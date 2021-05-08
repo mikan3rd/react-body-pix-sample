@@ -1,6 +1,6 @@
+import "@tensorflow/tfjs";
 import { css } from "@emotion/react";
 import * as bodyPix from "@tensorflow-models/body-pix";
-import "@tensorflow/tfjs";
 import React from "react";
 import { Checkbox, Container, Segment } from "semantic-ui-react";
 
@@ -9,11 +9,9 @@ const height = 480;
 
 const App: React.VFC = () => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const requestAnimationIdRef = React.useRef<number | null>(null);
   const bodyPixNetRef = React.useRef<bodyPix.BodyPix | null>(null);
-
-  // bodyPix.drawBokehEffect()でcanvasを破壊的に変更するためrefは使用しない
-  // const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   const [mediaStream, setMediaStream] = React.useState<MediaStream | null>(null);
 
@@ -21,7 +19,7 @@ const App: React.VFC = () => {
   const [useBodyPixState, setBodyPixState] = React.useState(false);
 
   const renderCanvas = async () => {
-    const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
+    const canvas = canvasRef.current;
     const video = videoRef.current;
     const useBodyPix = useBodyPixRef.current;
     const bodyPixNet = bodyPixNetRef.current;
@@ -106,7 +104,7 @@ const App: React.VFC = () => {
       </div>
       <Segment>
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
-        <canvas id="canvas" width={width} height={height} />
+        <canvas ref={canvasRef} width={width} height={height} />
       </Segment>
     </Container>
   );
