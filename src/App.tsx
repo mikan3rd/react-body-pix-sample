@@ -7,6 +7,8 @@ import { Checkbox, Container, Segment } from "semantic-ui-react";
 const width = 640;
 const height = 480;
 
+type BodyPixType = "off" | "bokeh" | "color";
+
 const App: React.VFC = () => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
@@ -19,17 +21,17 @@ const App: React.VFC = () => {
   const [mediaStreamState, setMediaStreamState] = React.useState<MediaStream | null>(null);
 
   // 上記のコメントと同じ理由
-  const useBodyPixRef = React.useRef(false);
-  const [useBodyPixState, setBodyPixState] = React.useState(false);
+  const bodyPixTypeRef = React.useRef<BodyPixType>("off");
+  const [bodyPixTypeState, setBodyPixTypeState] = React.useState<BodyPixType>("off");
 
   const setMediaStream = (mediaStream: MediaStream | null) => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
   };
 
-  const setBodyPix = (useBodyPix: boolean) => {
-    useBodyPixRef.current = useBodyPix;
-    setBodyPixState(useBodyPix);
+  const setBodyPix = (useBodyPix: BodyPixType) => {
+    bodyPixTypeRef.current = useBodyPix;
+    setBodyPixTypeState(useBodyPix);
   };
 
   const renderCanvas = async () => {
@@ -41,19 +43,27 @@ const App: React.VFC = () => {
 
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    const useBodyPix = useBodyPixRef.current;
     const bodyPixNet = bodyPixNetRef.current;
+    const bodyPixType = bodyPixTypeRef.current;
 
     if (canvas && video) {
-      if (useBodyPix && bodyPixNet) {
-        const segmentation = await bodyPixNet.segmentPerson(video);
-        bodyPix.drawBokehEffect(canvas, video, segmentation, 10);
-      } else {
+      if (bodyPixType === "off") {
         const ctx = canvas.getContext("2d");
         ctx?.drawImage(video, 0, 0);
+      } else {
+        if (bodyPixNet) {
+          const segmentation = await bodyPixNet.segmentPerson(video);
+          switch (bodyPixType) {
+            case "bokeh":
+              bodyPix.drawBokehEffect(canvas, video, segmentation, 10);
+              break;
+
+            default:
+              break;
+          }
+        }
       }
     }
-
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(renderCanvas);
@@ -92,15 +102,12 @@ const App: React.VFC = () => {
     }
   };
 
-  const handleBodyPix = async () => {
-    const useBodyPix = useBodyPixRef.current;
-
-    if (!useBodyPix && !bodyPixNetRef.current) {
+  const handleBodyPix = async (bodyPixType: BodyPixType) => {
+    if (bodyPixType !== "off" && !bodyPixNetRef.current) {
       const net = await bodyPix.load();
       bodyPixNetRef.current = net;
     }
-
-    setBodyPix(!useBodyPix);
+    setBodyPix(bodyPixType);
   };
 
   return (
@@ -112,13 +119,27 @@ const App: React.VFC = () => {
       >
         <Checkbox toggle checked={mediaStreamState !== null} label="Video" onChange={handleChangeVideo} />
       </div>
-      <div
+      <Segment
         css={css`
           margin-top: 12px;
         `}
       >
-        <Checkbox toggle checked={useBodyPixState} label="BodyPix" onChange={handleBodyPix} />
-      </div>
+        <div>
+          <Checkbox radio checked={bodyPixTypeState === "off"} label="Off" onChange={() => handleBodyPix("off")} />
+        </div>
+        <div
+          css={css`
+            margin-top: 12px;
+          `}
+        >
+          <Checkbox
+            radio
+            checked={bodyPixTypeState === "bokeh"}
+            label="Bokeh"
+            onChange={() => handleBodyPix("bokeh")}
+          />
+        </div>
+      </Segment>
       <Segment>
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
         <canvas ref={canvasRef} width={width} height={height} />
