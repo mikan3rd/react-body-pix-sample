@@ -3,6 +3,9 @@ import * as bodyPix from "@tensorflow-models/body-pix";
 
 type BodyPixType = "off" | "bokeh" | "colorMask";
 
+// requestAnimationFrame()の再起処理とReactのライフサイクルの相性が悪いためクラス変数で管理する
+// React.useState()を使うと再起処理内で使用されているstateがうまく反映できない
+// React.useRef()を使うと再起処理内の変数は呼び出しごとに更新が反映されるがUIの再レンダリングされない
 export class BodyPixControl {
   videoRef: React.RefObject<HTMLVideoElement>;
   canvasRef: React.RefObject<HTMLCanvasElement>;
@@ -12,8 +15,8 @@ export class BodyPixControl {
   bodyPixType: BodyPixType = "off";
   segmentation: bodyPix.SemanticPersonSegmentation | null = null;
 
-  width = 640;
-  height = 480;
+  width = 320;
+  height = 240;
   backgroundBlurAmount = 3;
   edgeBlurAmount = 3;
   maskBlurAmount = 0;

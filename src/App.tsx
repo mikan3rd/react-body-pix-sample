@@ -65,7 +65,10 @@ const App: React.VFC = () => {
             triggerReRender();
           }}
           css={css`
-            margin-bottom: 12px;
+            &&& {
+              display: block;
+              margin-bottom: 12px;
+            }
           `}
         />
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
