@@ -1,6 +1,6 @@
 import { css } from "@emotion/react";
 import React from "react";
-import { Checkbox, Container, Input, Segment } from "semantic-ui-react";
+import { Checkbox, Container, Input, Segment, Table } from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
 
@@ -20,7 +20,15 @@ const App: React.VFC = () => {
     triggerReRender();
   };
 
-  const { hasMediaStream, bodyPixType, width, height, backgroundBlurAmount, edgeBlurAmount } = bodyPixControl;
+  const {
+    hasMediaStream,
+    bodyPixType,
+    width,
+    height,
+    backgroundBlurAmount,
+    edgeBlurAmount,
+    flipHorizontal,
+  } = bodyPixControl;
 
   return (
     <Container text>
@@ -59,31 +67,56 @@ const App: React.VFC = () => {
             label="Bokeh"
             onChange={() => handleChangeBodyPix("bokeh")}
           />
-          <div>
-            <Input
-              label="backgroundBlurAmount"
-              type="number"
-              min={0}
-              max={20}
-              value={backgroundBlurAmount}
-              onChange={(e) => {
-                bodyPixControl.setBackgroundBlurAmount(Number(e.target.value));
-                triggerReRender();
-              }}
-            />
+          <Table celled striped unstackable>
+            <Table.Body>
+              <Table.Row>
+                <Table.Cell>backgroundBlurAmount</Table.Cell>
+                <Table.Cell>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={backgroundBlurAmount}
+                    onChange={(e) => {
+                      bodyPixControl.setBackgroundBlurAmount(Number(e.target.value));
+                      triggerReRender();
+                    }}
+                  />
+                </Table.Cell>
+              </Table.Row>
 
-            <Input
-              label="edgeBlurAmount"
-              type="number"
-              min={0}
-              max={20}
-              value={edgeBlurAmount}
-              onChange={(e) => {
-                bodyPixControl.setEdgeBlurAmount(Number(e.target.value));
-                triggerReRender();
-              }}
-            />
-          </div>
+              <Table.Row>
+                <Table.Cell>edgeBlurAmount</Table.Cell>
+                <Table.Cell>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={edgeBlurAmount}
+                    onChange={(e) => {
+                      bodyPixControl.setEdgeBlurAmount(Number(e.target.value));
+                      triggerReRender();
+                    }}
+                  />
+                </Table.Cell>
+              </Table.Row>
+
+              <Table.Row>
+                <Table.Cell>flipHorizontal</Table.Cell>
+                <Table.Cell>
+                  <Checkbox
+                    toggle
+                    checked={flipHorizontal}
+                    onChange={async () => {
+                      bodyPixControl.setFlipHorizontal(!flipHorizontal);
+                      triggerReRender();
+                    }}
+                  />
+                </Table.Cell>
+              </Table.Row>
+            </Table.Body>
+          </Table>
+          <div></div>
         </div>
       </Segment>
 

@@ -16,6 +16,7 @@ export class BodyPixControl {
   height = 480;
   backgroundBlurAmount = 3;
   edgeBlurAmount = 3;
+  flipHorizontal = false;
 
   constructor(videoRef: BodyPixControl["videoRef"], canvasRef: BodyPixControl["canvasRef"]) {
     this.videoRef = videoRef;
@@ -119,9 +120,9 @@ export class BodyPixControl {
 
   drawBokeh = async () => {
     await this.segmentPerson();
-    const { canvas, video, segmentation, backgroundBlurAmount } = this;
+    const { canvas, video, segmentation, backgroundBlurAmount, edgeBlurAmount, flipHorizontal } = this;
     if (canvas && video && segmentation) {
-      bodyPix.drawBokehEffect(canvas, video, segmentation, backgroundBlurAmount);
+      bodyPix.drawBokehEffect(canvas, video, segmentation, backgroundBlurAmount, edgeBlurAmount, flipHorizontal);
     }
   };
 
@@ -131,5 +132,9 @@ export class BodyPixControl {
 
   setEdgeBlurAmount = (edgeBlurAmount: number) => {
     this.edgeBlurAmount = edgeBlurAmount;
+  };
+
+  setFlipHorizontal = (flipHorizontal: boolean) => {
+    this.flipHorizontal = flipHorizontal;
   };
 }
