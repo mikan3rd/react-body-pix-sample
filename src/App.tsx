@@ -1,5 +1,6 @@
 import { css } from "@emotion/react";
 import React from "react";
+import { AlphaPicker, CompactPicker } from "react-color";
 import { Checkbox, Container, Divider, Input, Segment, Table } from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
@@ -30,6 +31,10 @@ const App: React.VFC = () => {
     flipHorizontal,
     maskBlurAmount,
     opacity,
+    backgroundColor,
+    backgroundColorValue,
+    foregroundColor,
+    foregroundColorValue,
   } = bodyPixControl;
 
   return (
@@ -123,12 +128,58 @@ const App: React.VFC = () => {
           <Checkbox
             radio
             checked={bodyPixType === "colorMask"}
-            label="Color"
+            label="ColorMask"
             onChange={() => handleChangeBodyPix("colorMask")}
           />
           {bodyPixType === "colorMask" && (
             <Table celled striped unstackable>
               <Table.Body>
+                <Table.Row>
+                  <Table.Cell>backgroundColor</Table.Cell>
+                  <Table.Cell>
+                    <CompactPicker
+                      color={backgroundColorValue}
+                      onChange={({ rgb: { r, g, b } }) => {
+                        bodyPixControl.setBackgroundColor({ r, g, b, a: backgroundColor.a });
+                        triggerReRender();
+                      }}
+                    />
+                    <AlphaPicker
+                      color={backgroundColorValue}
+                      onChange={({ rgb: { r, g, b, a } }) => {
+                        bodyPixControl.setBackgroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
+                        triggerReRender();
+                      }}
+                      css={css`
+                        margin-top: 12px;
+                      `}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>foregroundColor</Table.Cell>
+                  <Table.Cell>
+                    <CompactPicker
+                      color={foregroundColorValue}
+                      onChange={({ rgb: { r, g, b } }) => {
+                        bodyPixControl.setForegroundColor({ r, g, b, a: foregroundColor.a });
+                        triggerReRender();
+                      }}
+                    />
+                    <AlphaPicker
+                      color={foregroundColorValue}
+                      onChange={({ rgb: { r, g, b, a } }) => {
+                        bodyPixControl.setForegroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
+                        triggerReRender();
+                      }}
+                      css={css`
+                        margin-top: 12px;
+                      `}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
                 <Table.Row>
                   <Table.Cell>opacity</Table.Cell>
                   <Table.Cell>

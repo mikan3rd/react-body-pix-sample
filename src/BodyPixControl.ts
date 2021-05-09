@@ -39,6 +39,20 @@ export class BodyPixControl {
     return this.mediaStream !== null;
   }
 
+  get backgroundColorValue() {
+    const {
+      backgroundColor: { r, g, b, a },
+    } = this;
+    return { r, g, b, a: Math.round((a / 255) * 100) / 100 };
+  }
+
+  get foregroundColorValue() {
+    const {
+      foregroundColor: { r, g, b, a },
+    } = this;
+    return { r, g, b, a: Math.round((a / 255) * 100) / 100 };
+  }
+
   handleChangeVideo = async () => {
     if (this.mediaStream !== null) {
       this.stopVideo();
@@ -168,5 +182,13 @@ export class BodyPixControl {
 
   setOpacity = (opacity: number) => {
     this.opacity = opacity;
+  };
+
+  setBackgroundColor = (backgroundColor: BodyPixControl["backgroundColor"]) => {
+    this.backgroundColor = backgroundColor;
+  };
+
+  setForegroundColor = (foregroundColor: BodyPixControl["foregroundColor"]) => {
+    this.foregroundColor = foregroundColor;
   };
 }
