@@ -14,7 +14,8 @@ export class BodyPixControl {
 
   width = 640;
   height = 480;
-  backgroundBlurAmount = 10;
+  backgroundBlurAmount = 3;
+  edgeBlurAmount = 3;
 
   constructor(videoRef: BodyPixControl["videoRef"], canvasRef: BodyPixControl["canvasRef"]) {
     this.videoRef = videoRef;
@@ -126,5 +127,9 @@ export class BodyPixControl {
 
   setBackgroundBlurAmount = (backgroundBlurAmount: number) => {
     this.backgroundBlurAmount = backgroundBlurAmount;
+  };
+
+  setEdgeBlurAmount = (edgeBlurAmount: number) => {
+    this.edgeBlurAmount = edgeBlurAmount;
   };
 }

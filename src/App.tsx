@@ -20,7 +20,7 @@ const App: React.VFC = () => {
     triggerReRender();
   };
 
-  const { hasMediaStream, bodyPixType, width, height, backgroundBlurAmount } = bodyPixControl;
+  const { hasMediaStream, bodyPixType, width, height, backgroundBlurAmount, edgeBlurAmount } = bodyPixControl;
 
   return (
     <Container text>
@@ -39,6 +39,7 @@ const App: React.VFC = () => {
           }}
         />
       </div>
+
       <Segment
         css={css`
           margin-top: 12px;
@@ -70,9 +71,22 @@ const App: React.VFC = () => {
                 triggerReRender();
               }}
             />
+
+            <Input
+              label="edgeBlurAmount"
+              type="number"
+              min={0}
+              max={20}
+              value={edgeBlurAmount}
+              onChange={(e) => {
+                bodyPixControl.setEdgeBlurAmount(Number(e.target.value));
+                triggerReRender();
+              }}
+            />
           </div>
         </div>
       </Segment>
+
       <Segment>
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
         <canvas ref={canvasRef} width={width} height={height} />
