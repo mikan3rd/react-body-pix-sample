@@ -38,10 +38,22 @@ const App: React.VFC = () => {
   } = bodyPixControl;
 
   return (
-    <Container text>
-      <div
+    <Container
+      text
+      css={css`
+        &&& {
+          padding: 12px 0 64px;
+        }
+      `}
+    >
+      <Segment
         css={css`
-          margin-top: 12px;
+          &&& {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+          }
         `}
       >
         <Checkbox
@@ -52,8 +64,13 @@ const App: React.VFC = () => {
             await bodyPixControl.handleChangeVideo();
             triggerReRender();
           }}
+          css={css`
+            margin-bottom: 12px;
+          `}
         />
-      </div>
+        <video ref={videoRef} width={width} height={height} autoPlay hidden />
+        <canvas ref={canvasRef} width={width} height={height} />
+      </Segment>
 
       <Segment>
         <div>
@@ -230,11 +247,6 @@ const App: React.VFC = () => {
             </Table>
           )}
         </div>
-      </Segment>
-
-      <Segment>
-        <video ref={videoRef} width={width} height={height} autoPlay hidden />
-        <canvas ref={canvasRef} width={width} height={height} />
       </Segment>
     </Container>
   );
