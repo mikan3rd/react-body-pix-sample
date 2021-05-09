@@ -1,7 +1,7 @@
 import "@tensorflow/tfjs";
 import * as bodyPix from "@tensorflow-models/body-pix";
 
-type BodyPixType = "off" | "bokeh" | "color";
+type BodyPixType = "off" | "bokeh" | "colorMask";
 
 export class BodyPixControl {
   videoRef: React.RefObject<HTMLVideoElement>;
@@ -16,7 +16,11 @@ export class BodyPixControl {
   height = 480;
   backgroundBlurAmount = 3;
   edgeBlurAmount = 3;
+  maskBlurAmount = 0;
+  opacity = 0.7;
   flipHorizontal = false;
+  foregroundColor = { r: 0, g: 0, b: 0, a: 0 };
+  backgroundColor = { r: 0, g: 0, b: 0, a: 255 };
 
   constructor(videoRef: BodyPixControl["videoRef"], canvasRef: BodyPixControl["canvasRef"]) {
     this.videoRef = videoRef;
@@ -77,11 +81,9 @@ export class BodyPixControl {
   };
 
   renderCanvas = async () => {
-    const { mediaStream } = this;
-
     // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
     // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
-    if (mediaStream === null) {
+    if (this.mediaStream === null) {
       return;
     }
 
@@ -92,6 +94,10 @@ export class BodyPixControl {
 
       case "bokeh":
         await this.drawBokeh();
+        break;
+
+      case "colorMask":
+        await this.drawMask();
         break;
 
       default:
@@ -126,6 +132,24 @@ export class BodyPixControl {
     }
   };
 
+  drawMask = async () => {
+    await this.segmentPerson();
+    const {
+      canvas,
+      video,
+      segmentation,
+      opacity,
+      maskBlurAmount,
+      flipHorizontal,
+      foregroundColor,
+      backgroundColor,
+    } = this;
+    if (canvas && video && segmentation) {
+      const backgroundDarkeningMask = bodyPix.toMask(segmentation, foregroundColor, backgroundColor);
+      bodyPix.drawMask(canvas, video, backgroundDarkeningMask, opacity, maskBlurAmount, flipHorizontal);
+    }
+  };
+
   setBackgroundBlurAmount = (backgroundBlurAmount: number) => {
     this.backgroundBlurAmount = backgroundBlurAmount;
   };
@@ -136,5 +160,13 @@ export class BodyPixControl {
 
   setFlipHorizontal = (flipHorizontal: boolean) => {
     this.flipHorizontal = flipHorizontal;
+  };
+
+  setMaskBlurAmount = (maskBlurAmount: number) => {
+    this.maskBlurAmount = maskBlurAmount;
+  };
+
+  setOpacity = (opacity: number) => {
+    this.opacity = opacity;
   };
 }
