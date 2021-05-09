@@ -17,6 +17,14 @@ export class BodyPixControl {
 
   width = 320;
   height = 240;
+
+  // segmentPerson
+  internalResolution = 0.5;
+  segmentationThreshold = 0.7;
+  maxDetections = 10;
+  scoreThreshold = 0.3;
+  nmsRadius = 20;
+
   backgroundBlurAmount = 3;
   edgeBlurAmount = 3;
   maskBlurAmount = 0;
@@ -97,7 +105,7 @@ export class BodyPixControl {
     this.mediaStream = null;
   };
 
-  renderCanvas = async () => {
+  private renderCanvas = async () => {
     // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
     // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
     if (this.mediaStream === null) {
@@ -126,14 +134,29 @@ export class BodyPixControl {
     requestAnimationFrame(this.renderCanvas);
   };
 
-  segmentPerson = async () => {
-    const { bodyPixNet, video } = this;
+  private segmentPerson = async () => {
+    const {
+      bodyPixNet,
+      video,
+      internalResolution,
+      segmentationThreshold,
+      maxDetections,
+      scoreThreshold,
+      nmsRadius,
+    } = this;
+
     if (bodyPixNet && video) {
-      this.segmentation = await bodyPixNet.segmentPerson(video);
+      this.segmentation = await bodyPixNet.segmentPerson(video, {
+        internalResolution,
+        segmentationThreshold,
+        maxDetections,
+        scoreThreshold,
+        nmsRadius,
+      });
     }
   };
 
-  drawNormal = () => {
+  private drawNormal = () => {
     const { canvas, video } = this;
     if (canvas && video) {
       const ctx = canvas.getContext("2d");
@@ -141,7 +164,7 @@ export class BodyPixControl {
     }
   };
 
-  drawBokeh = async () => {
+  private drawBokeh = async () => {
     await this.segmentPerson();
     const { canvas, video, segmentation, backgroundBlurAmount, edgeBlurAmount, flipHorizontal } = this;
     if (canvas && video && segmentation) {
@@ -149,7 +172,7 @@ export class BodyPixControl {
     }
   };
 
-  drawMask = async () => {
+  private drawMask = async () => {
     await this.segmentPerson();
     const {
       canvas,
@@ -167,31 +190,51 @@ export class BodyPixControl {
     }
   };
 
-  setBackgroundBlurAmount = (backgroundBlurAmount: number) => {
+  setBackgroundBlurAmount = (backgroundBlurAmount: this["backgroundBlurAmount"]) => {
     this.backgroundBlurAmount = backgroundBlurAmount;
   };
 
-  setEdgeBlurAmount = (edgeBlurAmount: number) => {
+  setEdgeBlurAmount = (edgeBlurAmount: this["edgeBlurAmount"]) => {
     this.edgeBlurAmount = edgeBlurAmount;
   };
 
-  setFlipHorizontal = (flipHorizontal: boolean) => {
+  setFlipHorizontal = (flipHorizontal: this["flipHorizontal"]) => {
     this.flipHorizontal = flipHorizontal;
   };
 
-  setMaskBlurAmount = (maskBlurAmount: number) => {
+  setMaskBlurAmount = (maskBlurAmount: this["maskBlurAmount"]) => {
     this.maskBlurAmount = maskBlurAmount;
   };
 
-  setOpacity = (opacity: number) => {
+  setOpacity = (opacity: this["opacity"]) => {
     this.opacity = opacity;
   };
 
-  setBackgroundColor = (backgroundColor: BodyPixControl["backgroundColor"]) => {
+  setBackgroundColor = (backgroundColor: this["backgroundColor"]) => {
     this.backgroundColor = backgroundColor;
   };
 
-  setForegroundColor = (foregroundColor: BodyPixControl["foregroundColor"]) => {
+  setForegroundColor = (foregroundColor: this["foregroundColor"]) => {
     this.foregroundColor = foregroundColor;
+  };
+
+  setIternalResolution = (internalResolution: this["internalResolution"]) => {
+    this.internalResolution = internalResolution;
+  };
+
+  setSegmentationThreshold = (segmentationThreshold: this["segmentationThreshold"]) => {
+    this.segmentationThreshold = segmentationThreshold;
+  };
+
+  setMaxDetections = (maxDetections: this["maxDetections"]) => {
+    this.maxDetections = maxDetections;
+  };
+
+  setScoreThreshold = (scoreThreshold: this["scoreThreshold"]) => {
+    this.scoreThreshold = scoreThreshold;
+  };
+
+  setNmsRadius = (nmsRadius: this["nmsRadius"]) => {
+    this.nmsRadius = nmsRadius;
   };
 }

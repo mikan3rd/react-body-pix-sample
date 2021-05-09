@@ -1,7 +1,7 @@
 import { css } from "@emotion/react";
 import React from "react";
 import { AlphaPicker, CompactPicker } from "react-color";
-import { Checkbox, Container, Divider, Input, Segment, Table } from "semantic-ui-react";
+import { Checkbox, Container, Divider, Header, Input, Segment, Table } from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
 
@@ -26,6 +26,11 @@ const App: React.VFC = () => {
     bodyPixType,
     width,
     height,
+    internalResolution,
+    segmentationThreshold,
+    maxDetections,
+    scoreThreshold,
+    nmsRadius,
     backgroundBlurAmount,
     edgeBlurAmount,
     flipHorizontal,
@@ -76,6 +81,98 @@ const App: React.VFC = () => {
       </Segment>
 
       <Segment>
+        <Header content="Segment Setting" />
+        <Table celled striped unstackable>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>internalResolution</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={internalResolution}
+                  onChange={(e) => {
+                    bodyPixControl.setIternalResolution(Number(e.target.value));
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>segmentationThreshold</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={segmentationThreshold}
+                  onChange={(e) => {
+                    bodyPixControl.setSegmentationThreshold(Number(e.target.value));
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>maxDetections</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={maxDetections}
+                  onChange={(e) => {
+                    bodyPixControl.setMaxDetections(Number(e.target.value));
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>scoreThreshold</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={scoreThreshold}
+                  onChange={(e) => {
+                    bodyPixControl.setScoreThreshold(Number(e.target.value));
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>nmsRadius</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={1}
+                  max={40}
+                  value={nmsRadius}
+                  onChange={(e) => {
+                    bodyPixControl.setNmsRadius(Number(e.target.value));
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
+      </Segment>
+
+      <Segment>
+        <Header content="BodyPix Type" />
+
         <div>
           <Checkbox radio checked={bodyPixType === "off"} label="Off" onChange={() => handleChangeBodyPix("off")} />
         </div>
