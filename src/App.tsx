@@ -1,107 +1,41 @@
-import "@tensorflow/tfjs";
 import { css } from "@emotion/react";
-import * as bodyPix from "@tensorflow-models/body-pix";
 import React from "react";
-import { Checkbox, Container, Segment } from "semantic-ui-react";
+import { AlphaPicker, CompactPicker } from "react-color";
+import { Checkbox, Container, Divider, Input, Segment, Table } from "semantic-ui-react";
 
-const width = 640;
-const height = 480;
+import { BodyPixControl } from "./BodyPixControl";
 
 const App: React.VFC = () => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
-  const bodyPixNetRef = React.useRef<bodyPix.BodyPix | null>(null);
+  const [bodyPixControl] = React.useState(new BodyPixControl(videoRef, canvasRef));
+  const [, setReRender] = React.useState(0);
 
-  // mediaStreamRef ... requestAnimationFrame内で使用するため必要
-  // mediaStreamState ... ON/OFFに切り替えをレンダリングに反映するために必要
-  const mediaStreamRef = React.useRef<MediaStream | null>(null);
-  const [mediaStreamState, setMediaStreamState] = React.useState<MediaStream | null>(null);
-
-  // 上記のコメントと同じ理由
-  const useBodyPixRef = React.useRef(false);
-  const [useBodyPixState, setBodyPixState] = React.useState(false);
-
-  const setMediaStream = (mediaStream: MediaStream | null) => {
-    mediaStreamRef.current = mediaStream;
-    setMediaStreamState(mediaStream);
+  const triggerReRender = () => {
+    setReRender((prev) => prev + 1);
   };
 
-  const setBodyPix = (useBodyPix: boolean) => {
-    useBodyPixRef.current = useBodyPix;
-    setBodyPixState(useBodyPix);
+  const handleChangeBodyPix = async (bodyPixType: BodyPixControl["bodyPixType"]) => {
+    await bodyPixControl.handleChangeBodyPixType(bodyPixType);
+    triggerReRender();
   };
 
-  const renderCanvas = async () => {
-    // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
-    // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
-    if (mediaStreamRef.current === null) {
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    const video = videoRef.current;
-    const useBodyPix = useBodyPixRef.current;
-    const bodyPixNet = bodyPixNetRef.current;
-
-    if (canvas && video) {
-      if (useBodyPix && bodyPixNet) {
-        const segmentation = await bodyPixNet.segmentPerson(video);
-        bodyPix.drawBokehEffect(canvas, video, segmentation, 10);
-      } else {
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(video, 0, 0);
-      }
-    }
-
-    // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
-    // この場合にも対応したい場合はsetTimeoutを使用する
-    requestAnimationFrame(renderCanvas);
-  };
-
-  const startVideo = async () => {
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width,
-        height,
-      },
-      audio: true,
-    });
-    setMediaStream(mediaStream);
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = mediaStream;
-      videoRef.current.addEventListener("loadeddata", async () => {
-        await renderCanvas();
-      });
-    }
-  };
-
-  const stopVideo = () => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      setMediaStream(null);
-    }
-  };
-
-  const handleChangeVideo = () => {
-    if (mediaStreamRef.current !== null) {
-      stopVideo();
-    } else {
-      startVideo();
-    }
-  };
-
-  const handleBodyPix = async () => {
-    const useBodyPix = useBodyPixRef.current;
-
-    if (!useBodyPix && !bodyPixNetRef.current) {
-      const net = await bodyPix.load();
-      bodyPixNetRef.current = net;
-    }
-
-    setBodyPix(!useBodyPix);
-  };
+  const {
+    hasMediaStream,
+    bodyPixType,
+    width,
+    height,
+    backgroundBlurAmount,
+    edgeBlurAmount,
+    flipHorizontal,
+    maskBlurAmount,
+    opacity,
+    backgroundColor,
+    backgroundColorValue,
+    foregroundColor,
+    foregroundColorValue,
+  } = bodyPixControl;
 
   return (
     <Container text>
@@ -110,15 +44,194 @@ const App: React.VFC = () => {
           margin-top: 12px;
         `}
       >
-        <Checkbox toggle checked={mediaStreamState !== null} label="Video" onChange={handleChangeVideo} />
+        <Checkbox
+          toggle
+          checked={hasMediaStream}
+          label="Video"
+          onChange={async () => {
+            await bodyPixControl.handleChangeVideo();
+            triggerReRender();
+          }}
+        />
       </div>
-      <div
-        css={css`
-          margin-top: 12px;
-        `}
-      >
-        <Checkbox toggle checked={useBodyPixState} label="BodyPix" onChange={handleBodyPix} />
-      </div>
+
+      <Segment>
+        <div>
+          <Checkbox radio checked={bodyPixType === "off"} label="Off" onChange={() => handleChangeBodyPix("off")} />
+        </div>
+
+        <Divider />
+
+        <div>
+          <Checkbox
+            radio
+            checked={bodyPixType === "bokeh"}
+            label="Bokeh"
+            onChange={() => handleChangeBodyPix("bokeh")}
+          />
+          {bodyPixType === "bokeh" && (
+            <Table celled striped unstackable>
+              <Table.Body>
+                <Table.Row>
+                  <Table.Cell>backgroundBlurAmount</Table.Cell>
+                  <Table.Cell>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={backgroundBlurAmount}
+                      onChange={(e) => {
+                        bodyPixControl.setBackgroundBlurAmount(Number(e.target.value));
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>edgeBlurAmount</Table.Cell>
+                  <Table.Cell>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={edgeBlurAmount}
+                      onChange={(e) => {
+                        bodyPixControl.setEdgeBlurAmount(Number(e.target.value));
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>flipHorizontal</Table.Cell>
+                  <Table.Cell>
+                    <Checkbox
+                      toggle
+                      checked={flipHorizontal}
+                      onChange={async () => {
+                        bodyPixControl.setFlipHorizontal(!flipHorizontal);
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            </Table>
+          )}
+        </div>
+
+        <Divider />
+
+        <div>
+          <Checkbox
+            radio
+            checked={bodyPixType === "colorMask"}
+            label="ColorMask"
+            onChange={() => handleChangeBodyPix("colorMask")}
+          />
+          {bodyPixType === "colorMask" && (
+            <Table celled striped unstackable>
+              <Table.Body>
+                <Table.Row>
+                  <Table.Cell>backgroundColor</Table.Cell>
+                  <Table.Cell>
+                    <CompactPicker
+                      color={backgroundColorValue}
+                      onChange={({ rgb: { r, g, b } }) => {
+                        bodyPixControl.setBackgroundColor({ r, g, b, a: backgroundColor.a });
+                        triggerReRender();
+                      }}
+                    />
+                    <AlphaPicker
+                      color={backgroundColorValue}
+                      onChange={({ rgb: { r, g, b, a } }) => {
+                        bodyPixControl.setBackgroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
+                        triggerReRender();
+                      }}
+                      css={css`
+                        margin-top: 12px;
+                      `}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>foregroundColor</Table.Cell>
+                  <Table.Cell>
+                    <CompactPicker
+                      color={foregroundColorValue}
+                      onChange={({ rgb: { r, g, b } }) => {
+                        bodyPixControl.setForegroundColor({ r, g, b, a: foregroundColor.a });
+                        triggerReRender();
+                      }}
+                    />
+                    <AlphaPicker
+                      color={foregroundColorValue}
+                      onChange={({ rgb: { r, g, b, a } }) => {
+                        bodyPixControl.setForegroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
+                        triggerReRender();
+                      }}
+                      css={css`
+                        margin-top: 12px;
+                      `}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>opacity</Table.Cell>
+                  <Table.Cell>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={1}
+                      step="0.1"
+                      value={opacity}
+                      onChange={(e) => {
+                        bodyPixControl.setOpacity(Number(e.target.value));
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>maskBlurAmount</Table.Cell>
+                  <Table.Cell>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={maskBlurAmount}
+                      onChange={(e) => {
+                        bodyPixControl.setMaskBlurAmount(Number(e.target.value));
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+
+                <Table.Row>
+                  <Table.Cell>flipHorizontal</Table.Cell>
+                  <Table.Cell>
+                    <Checkbox
+                      toggle
+                      checked={flipHorizontal}
+                      onChange={async () => {
+                        bodyPixControl.setFlipHorizontal(!flipHorizontal);
+                        triggerReRender();
+                      }}
+                    />
+                  </Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            </Table>
+          )}
+        </div>
+      </Segment>
+
       <Segment>
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
         <canvas ref={canvasRef} width={width} height={height} />
