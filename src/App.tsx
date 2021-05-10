@@ -174,7 +174,17 @@ const App: React.VFC = () => {
         <Header content="BodyPix Type" />
 
         <div>
-          <Checkbox radio checked={bodyPixType === "off"} label="Off" onChange={() => handleChangeBodyPix("off")} />
+          <Checkbox
+            radio
+            checked={bodyPixType === "off"}
+            label="Off"
+            onChange={() => handleChangeBodyPix("off")}
+            css={css`
+              &&& {
+                display: block;
+              }
+            `}
+          />
         </div>
 
         <Divider />
@@ -185,6 +195,11 @@ const App: React.VFC = () => {
             checked={bodyPixType === "bokeh"}
             label="Bokeh"
             onChange={() => handleChangeBodyPix("bokeh")}
+            css={css`
+              &&& {
+                display: block;
+              }
+            `}
           />
           {bodyPixType === "bokeh" && (
             <Table celled striped unstackable>
@@ -247,6 +262,11 @@ const App: React.VFC = () => {
             checked={bodyPixType === "colorMask"}
             label="ColorMask"
             onChange={() => handleChangeBodyPix("colorMask")}
+            css={css`
+              &&& {
+                display: block;
+              }
+            `}
           />
           {bodyPixType === "colorMask" && (
             <Table celled striped unstackable>

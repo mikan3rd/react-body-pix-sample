@@ -87,7 +87,7 @@ export class BodyPixControl {
         width,
         height,
       },
-      audio: true,
+      audio: false, // TODO
     });
     this.mediaStream = mediaStream;
 
