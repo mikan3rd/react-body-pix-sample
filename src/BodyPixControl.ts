@@ -1,6 +1,7 @@
 import "@tensorflow/tfjs";
 import * as bodyPix from "@tensorflow-models/body-pix";
 
+type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type BodyPixType = "off" | "bokeh" | "colorMask";
 
 // requestAnimationFrame()の再起処理とReactのライフサイクルの相性が悪いためクラス変数で管理する
@@ -18,6 +19,12 @@ export class BodyPixControl {
   width = 320;
   height = 240;
 
+  // bodypix
+  architecture: ModelConfig["architecture"] = "MobileNetV1";
+  outputStride: ModelConfig["outputStride"] = 16;
+  multiplier: NonNullable<ModelConfig["multiplier"]> = 1.0;
+  quantBytes: NonNullable<ModelConfig["quantBytes"]> = 4;
+
   // segmentPerson
   internalResolution = 0.5;
   segmentationThreshold = 0.7;
@@ -25,6 +32,7 @@ export class BodyPixControl {
   scoreThreshold = 0.3;
   nmsRadius = 20;
 
+  // effect
   backgroundBlurAmount = 3;
   edgeBlurAmount = 3;
   maskBlurAmount = 0;
@@ -64,6 +72,14 @@ export class BodyPixControl {
     return { r, g, b, a: Math.round((a / 255) * 100) / 100 };
   }
 
+  get quantBytesOptions(): { text: BodyPixControl["quantBytes"]; value: BodyPixControl["quantBytes"] }[] {
+    return [
+      { value: 4, text: 4 },
+      { value: 2, text: 2 },
+      { value: 1, text: 1 },
+    ];
+  }
+
   handleChangeVideo = async () => {
     if (this.mediaStream !== null) {
       this.stopVideo();
@@ -74,8 +90,7 @@ export class BodyPixControl {
 
   handleChangeBodyPixType = async (bodyPixType: BodyPixType) => {
     if (bodyPixType !== "off" && !this.bodyPixNet) {
-      const net = await bodyPix.load();
-      this.bodyPixNet = net;
+      await this.loadBodyPix();
     }
     this.bodyPixType = bodyPixType;
   };
@@ -132,6 +147,17 @@ export class BodyPixControl {
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(this.renderCanvas);
+  };
+
+  private loadBodyPix = async () => {
+    const { architecture, outputStride, multiplier, quantBytes } = this;
+    const net = await bodyPix.load({
+      architecture,
+      outputStride,
+      multiplier,
+      quantBytes,
+    });
+    this.bodyPixNet = net;
   };
 
   private segmentPerson = async () => {
@@ -236,5 +262,10 @@ export class BodyPixControl {
 
   setNmsRadius = (nmsRadius: this["nmsRadius"]) => {
     this.nmsRadius = nmsRadius;
+  };
+
+  setQuantBytes = async (quantBytes: this["quantBytes"]) => {
+    this.quantBytes = quantBytes;
+    await this.loadBodyPix();
   };
 }

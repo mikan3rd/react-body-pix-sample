@@ -1,7 +1,7 @@
 import { css } from "@emotion/react";
 import React from "react";
 import { AlphaPicker, CompactPicker } from "react-color";
-import { Checkbox, Container, Divider, Header, Input, Segment, Table } from "semantic-ui-react";
+import { Checkbox, Container, Divider, Dropdown, Header, Input, Segment, Table } from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
 
@@ -23,6 +23,8 @@ const App: React.VFC = () => {
 
   const {
     hasMediaStream,
+    quantBytes,
+    quantBytesOptions,
     bodyPixType,
     width,
     height,
@@ -78,6 +80,29 @@ const App: React.VFC = () => {
         />
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
         <canvas ref={canvasRef} width={width} height={height} />
+      </Segment>
+
+      <Segment>
+        <Header content="BodyPix Setting" />
+        <Table celled striped unstackable>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>quantBytes</Table.Cell>
+              <Table.Cell>
+                <Dropdown
+                  selection
+                  compact
+                  value={quantBytes}
+                  options={quantBytesOptions}
+                  onChange={async (e, d) => {
+                    await bodyPixControl.setQuantBytes(d.value as typeof quantBytes);
+                    triggerReRender();
+                  }}
+                />
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
       </Segment>
 
       <Segment>
@@ -171,7 +196,7 @@ const App: React.VFC = () => {
       </Segment>
 
       <Segment>
-        <Header content="BodyPix Type" />
+        <Header content="BodyPix Effect" />
 
         <div>
           <Checkbox
