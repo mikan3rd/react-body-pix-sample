@@ -15,10 +15,10 @@ import {
 } from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
+import { useBodyPix } from "./useBodyPix";
 
 const App: React.VFC = () => {
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const { videoRef, canvasRef, loading, hasMediaStream, handleChangeEffectType } = useBodyPix();
 
   const [, setReRender] = React.useState(0);
 
@@ -34,8 +34,6 @@ const App: React.VFC = () => {
   };
 
   const {
-    loading,
-    hasMediaStream,
     architecture,
     architectureOptions,
     quantBytes,
