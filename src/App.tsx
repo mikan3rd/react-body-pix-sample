@@ -1,7 +1,18 @@
 import { css } from "@emotion/react";
 import React from "react";
 import { AlphaPicker, CompactPicker } from "react-color";
-import { Checkbox, Container, Divider, Dropdown, Header, Input, Segment, Table } from "semantic-ui-react";
+import {
+  Checkbox,
+  Container,
+  Dimmer,
+  Divider,
+  Dropdown,
+  Header,
+  Input,
+  Loader,
+  Segment,
+  Table,
+} from "semantic-ui-react";
 
 import { BodyPixControl } from "./BodyPixControl";
 
@@ -9,12 +20,13 @@ const App: React.VFC = () => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
-  const [bodyPixControl] = React.useState(new BodyPixControl(videoRef, canvasRef));
   const [, setReRender] = React.useState(0);
 
   const triggerReRender = () => {
     setReRender((prev) => prev + 1);
   };
+
+  const [bodyPixControl] = React.useState(new BodyPixControl(videoRef, canvasRef, triggerReRender));
 
   const handleChangeBodyPix = async (bodyPixType: BodyPixControl["bodyPixType"]) => {
     await bodyPixControl.handleChangeBodyPixType(bodyPixType);
@@ -22,7 +34,10 @@ const App: React.VFC = () => {
   };
 
   const {
+    loading,
     hasMediaStream,
+    architecture,
+    architectureOptions,
     quantBytes,
     quantBytesOptions,
     bodyPixType,
@@ -80,12 +95,29 @@ const App: React.VFC = () => {
         />
         <video ref={videoRef} width={width} height={height} autoPlay hidden />
         <canvas ref={canvasRef} width={width} height={height} />
+
+        <Dimmer active={loading}>
+          <Loader />
+        </Dimmer>
       </Segment>
 
       <Segment>
         <Header content="BodyPix Setting" />
         <Table celled striped unstackable>
           <Table.Body>
+            <Table.Row>
+              <Table.Cell>architecture</Table.Cell>
+              <Table.Cell>
+                <Dropdown
+                  selection
+                  compact
+                  value={architecture}
+                  options={architectureOptions}
+                  onChange={async (e, d) => await bodyPixControl.setArchitecture(d.value as typeof architecture)}
+                />
+              </Table.Cell>
+            </Table.Row>
+
             <Table.Row>
               <Table.Cell>quantBytes</Table.Cell>
               <Table.Cell>

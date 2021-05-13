@@ -10,12 +10,14 @@ type BodyPixType = "off" | "bokeh" | "colorMask";
 export class BodyPixControl {
   videoRef: React.RefObject<HTMLVideoElement>;
   canvasRef: React.RefObject<HTMLCanvasElement>;
+  triggerReRender: () => void;
 
   bodyPixNet: bodyPix.BodyPix | null = null;
   mediaStream: MediaStream | null = null;
   bodyPixType: BodyPixType = "off";
   segmentation: bodyPix.SemanticPersonSegmentation | null = null;
 
+  loading = false;
   width = 320;
   height = 240;
 
@@ -41,9 +43,14 @@ export class BodyPixControl {
   foregroundColor = { r: 0, g: 0, b: 0, a: 0 };
   backgroundColor = { r: 0, g: 0, b: 0, a: 255 };
 
-  constructor(videoRef: BodyPixControl["videoRef"], canvasRef: BodyPixControl["canvasRef"]) {
+  constructor(
+    videoRef: BodyPixControl["videoRef"],
+    canvasRef: BodyPixControl["canvasRef"],
+    triggerReRender: BodyPixControl["triggerReRender"],
+  ) {
     this.videoRef = videoRef;
     this.canvasRef = canvasRef;
+    this.triggerReRender = triggerReRender;
   }
 
   get video() {
@@ -70,6 +77,13 @@ export class BodyPixControl {
       foregroundColor: { r, g, b, a },
     } = this;
     return { r, g, b, a: Math.round((a / 255) * 100) / 100 };
+  }
+
+  get architectureOptions(): { text: BodyPixControl["architecture"]; value: BodyPixControl["architecture"] }[] {
+    return [
+      { value: "ResNet50", text: "ResNet50" },
+      { value: "MobileNetV1", text: "MobileNetV1" },
+    ];
   }
 
   get quantBytesOptions(): { text: BodyPixControl["quantBytes"]; value: BodyPixControl["quantBytes"] }[] {
@@ -150,6 +164,9 @@ export class BodyPixControl {
   };
 
   private loadBodyPix = async () => {
+    this.loading = true;
+    this.triggerReRender();
+
     const { architecture, outputStride, multiplier, quantBytes } = this;
     const net = await bodyPix.load({
       architecture,
@@ -158,6 +175,9 @@ export class BodyPixControl {
       quantBytes,
     });
     this.bodyPixNet = net;
+
+    this.loading = false;
+    this.triggerReRender();
   };
 
   private segmentPerson = async () => {
@@ -262,6 +282,11 @@ export class BodyPixControl {
 
   setNmsRadius = (nmsRadius: this["nmsRadius"]) => {
     this.nmsRadius = nmsRadius;
+  };
+
+  setArchitecture = async (architecture: this["architecture"]) => {
+    this.architecture = architecture;
+    await this.loadBodyPix();
   };
 
   setQuantBytes = async (quantBytes: this["quantBytes"]) => {
