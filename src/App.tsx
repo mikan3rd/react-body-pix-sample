@@ -14,50 +14,61 @@ import {
   Table,
 } from "semantic-ui-react";
 
-import { BodyPixControl } from "./BodyPixControl";
+import { useBodyPix } from "./useBodyPix";
 
 const App: React.VFC = () => {
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
-
-  const [, setReRender] = React.useState(0);
-
-  const triggerReRender = () => {
-    setReRender((prev) => prev + 1);
-  };
-
-  const [bodyPixControl] = React.useState(new BodyPixControl(videoRef, canvasRef, triggerReRender));
-
-  const handleChangeBodyPix = async (bodyPixType: BodyPixControl["bodyPixType"]) => {
-    await bodyPixControl.handleChangeBodyPixType(bodyPixType);
-    triggerReRender();
-  };
-
   const {
+    width,
+    height,
+    videoRef,
+    canvasRef,
     loading,
+    effectTypeState,
     hasMediaStream,
     architecture,
     architectureOptions,
     quantBytes,
     quantBytesOptions,
-    bodyPixType,
-    width,
-    height,
-    internalResolution,
-    segmentationThreshold,
-    maxDetections,
-    scoreThreshold,
-    nmsRadius,
-    backgroundBlurAmount,
-    edgeBlurAmount,
-    flipHorizontal,
-    maskBlurAmount,
-    opacity,
-    backgroundColor,
+    internalResolutionState,
+    segmentationThresholdState,
+    maxDetectionsState,
+    scoreThresholdState,
+    nmsRadiusState,
+    backgroundBlurAmountState,
+    edgeBlurAmountState,
+    flipHorizontalState,
+    backgroundColorState,
     backgroundColorValue,
-    foregroundColor,
+    foregroundColorState,
     foregroundColorValue,
-  } = bodyPixControl;
+    opacityState,
+    maskBlurAmountState,
+    startVideo,
+    stopVideo,
+    handleChangeEffectType,
+    handleChangeArchitecture,
+    handleChangeQuantBytes,
+    handleChangeInternalResolution,
+    handleChangeSegmentationThreshold,
+    handleChangeMaxDetections,
+    handleChangeScoreThreshold,
+    handleChangeNmsRadius,
+    handleChangeBackgroundBlurAmount,
+    handleChangeEdgeBlurAmount,
+    handleChangeFlipHorizontal,
+    handleChangeBackgroundColor,
+    handleChangeForegroundColor,
+    handleChangeOpacity,
+    handleChangeMaskBlurAmount,
+  } = useBodyPix();
+
+  const handleToggleVideo = async () => {
+    if (hasMediaStream) {
+      stopVideo();
+    } else {
+      await startVideo();
+    }
+  };
 
   return (
     <Container
@@ -82,10 +93,7 @@ const App: React.VFC = () => {
           toggle
           checked={hasMediaStream}
           label="Video"
-          onChange={async () => {
-            await bodyPixControl.handleChangeVideo();
-            triggerReRender();
-          }}
+          onChange={handleToggleVideo}
           css={css`
             &&& {
               display: block;
@@ -113,7 +121,7 @@ const App: React.VFC = () => {
                   compact
                   value={architecture}
                   options={architectureOptions}
-                  onChange={async (e, d) => await bodyPixControl.setArchitecture(d.value as typeof architecture)}
+                  onChange={async (e, d) => await handleChangeArchitecture(d.value as typeof architecture)}
                 />
               </Table.Cell>
             </Table.Row>
@@ -126,10 +134,7 @@ const App: React.VFC = () => {
                   compact
                   value={quantBytes}
                   options={quantBytesOptions}
-                  onChange={async (e, d) => {
-                    await bodyPixControl.setQuantBytes(d.value as typeof quantBytes);
-                    triggerReRender();
-                  }}
+                  onChange={async (e, d) => await handleChangeQuantBytes(d.value as typeof quantBytes)}
                 />
               </Table.Cell>
             </Table.Row>
@@ -149,11 +154,8 @@ const App: React.VFC = () => {
                   min={0}
                   max={1}
                   step="0.05"
-                  value={internalResolution}
-                  onChange={(e) => {
-                    bodyPixControl.setIternalResolution(Number(e.target.value));
-                    triggerReRender();
-                  }}
+                  value={internalResolutionState}
+                  onChange={(e) => handleChangeInternalResolution(Number(e.target.value))}
                 />
               </Table.Cell>
             </Table.Row>
@@ -166,11 +168,8 @@ const App: React.VFC = () => {
                   min={0}
                   max={1}
                   step="0.05"
-                  value={segmentationThreshold}
-                  onChange={(e) => {
-                    bodyPixControl.setSegmentationThreshold(Number(e.target.value));
-                    triggerReRender();
-                  }}
+                  value={segmentationThresholdState}
+                  onChange={(e) => handleChangeSegmentationThreshold(Number(e.target.value))}
                 />
               </Table.Cell>
             </Table.Row>
@@ -182,11 +181,8 @@ const App: React.VFC = () => {
                   type="number"
                   min={1}
                   max={20}
-                  value={maxDetections}
-                  onChange={(e) => {
-                    bodyPixControl.setMaxDetections(Number(e.target.value));
-                    triggerReRender();
-                  }}
+                  value={maxDetectionsState}
+                  onChange={(e) => handleChangeMaxDetections(Number(e.target.value))}
                 />
               </Table.Cell>
             </Table.Row>
@@ -199,11 +195,8 @@ const App: React.VFC = () => {
                   min={0}
                   max={1}
                   step="0.05"
-                  value={scoreThreshold}
-                  onChange={(e) => {
-                    bodyPixControl.setScoreThreshold(Number(e.target.value));
-                    triggerReRender();
-                  }}
+                  value={scoreThresholdState}
+                  onChange={(e) => handleChangeScoreThreshold(Number(e.target.value))}
                 />
               </Table.Cell>
             </Table.Row>
@@ -215,11 +208,8 @@ const App: React.VFC = () => {
                   type="number"
                   min={1}
                   max={40}
-                  value={nmsRadius}
-                  onChange={(e) => {
-                    bodyPixControl.setNmsRadius(Number(e.target.value));
-                    triggerReRender();
-                  }}
+                  value={nmsRadiusState}
+                  onChange={(e) => handleChangeNmsRadius(Number(e.target.value))}
                 />
               </Table.Cell>
             </Table.Row>
@@ -233,9 +223,9 @@ const App: React.VFC = () => {
         <div>
           <Checkbox
             radio
-            checked={bodyPixType === "off"}
+            checked={effectTypeState === "off"}
             label="Off"
-            onChange={() => handleChangeBodyPix("off")}
+            onChange={() => handleChangeEffectType("off")}
             css={css`
               &&& {
                 display: block;
@@ -249,16 +239,16 @@ const App: React.VFC = () => {
         <div>
           <Checkbox
             radio
-            checked={bodyPixType === "bokeh"}
+            checked={effectTypeState === "bokeh"}
             label="Bokeh"
-            onChange={() => handleChangeBodyPix("bokeh")}
+            onChange={() => handleChangeEffectType("bokeh")}
             css={css`
               &&& {
                 display: block;
               }
             `}
           />
-          {bodyPixType === "bokeh" && (
+          {effectTypeState === "bokeh" && (
             <Table celled striped unstackable>
               <Table.Body>
                 <Table.Row>
@@ -268,11 +258,8 @@ const App: React.VFC = () => {
                       type="number"
                       min={0}
                       max={20}
-                      value={backgroundBlurAmount}
-                      onChange={(e) => {
-                        bodyPixControl.setBackgroundBlurAmount(Number(e.target.value));
-                        triggerReRender();
-                      }}
+                      value={backgroundBlurAmountState}
+                      onChange={(e) => handleChangeBackgroundBlurAmount(Number(e.target.value))}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -284,11 +271,8 @@ const App: React.VFC = () => {
                       type="number"
                       min={0}
                       max={20}
-                      value={edgeBlurAmount}
-                      onChange={(e) => {
-                        bodyPixControl.setEdgeBlurAmount(Number(e.target.value));
-                        triggerReRender();
-                      }}
+                      value={edgeBlurAmountState}
+                      onChange={(e) => handleChangeEdgeBlurAmount(Number(e.target.value))}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -298,11 +282,8 @@ const App: React.VFC = () => {
                   <Table.Cell>
                     <Checkbox
                       toggle
-                      checked={flipHorizontal}
-                      onChange={async () => {
-                        bodyPixControl.setFlipHorizontal(!flipHorizontal);
-                        triggerReRender();
-                      }}
+                      checked={flipHorizontalState}
+                      onChange={async () => handleChangeFlipHorizontal(!flipHorizontalState)}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -316,16 +297,16 @@ const App: React.VFC = () => {
         <div>
           <Checkbox
             radio
-            checked={bodyPixType === "colorMask"}
+            checked={effectTypeState === "colorMask"}
             label="ColorMask"
-            onChange={() => handleChangeBodyPix("colorMask")}
+            onChange={() => handleChangeEffectType("colorMask")}
             css={css`
               &&& {
                 display: block;
               }
             `}
           />
-          {bodyPixType === "colorMask" && (
+          {effectTypeState === "colorMask" && (
             <Table celled striped unstackable>
               <Table.Body>
                 <Table.Row>
@@ -333,17 +314,15 @@ const App: React.VFC = () => {
                   <Table.Cell>
                     <CompactPicker
                       color={backgroundColorValue}
-                      onChange={({ rgb: { r, g, b } }) => {
-                        bodyPixControl.setBackgroundColor({ r, g, b, a: backgroundColor.a });
-                        triggerReRender();
-                      }}
+                      onChange={({ rgb: { r, g, b } }) =>
+                        handleChangeBackgroundColor({ r, g, b, a: backgroundColorState.a })
+                      }
                     />
                     <AlphaPicker
                       color={backgroundColorValue}
-                      onChange={({ rgb: { r, g, b, a } }) => {
-                        bodyPixControl.setBackgroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
-                        triggerReRender();
-                      }}
+                      onChange={({ rgb: { r, g, b, a } }) =>
+                        handleChangeBackgroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) })
+                      }
                       css={css`
                         margin-top: 12px;
                       `}
@@ -356,17 +335,15 @@ const App: React.VFC = () => {
                   <Table.Cell>
                     <CompactPicker
                       color={foregroundColorValue}
-                      onChange={({ rgb: { r, g, b } }) => {
-                        bodyPixControl.setForegroundColor({ r, g, b, a: foregroundColor.a });
-                        triggerReRender();
-                      }}
+                      onChange={({ rgb: { r, g, b } }) =>
+                        handleChangeForegroundColor({ r, g, b, a: foregroundColorState.a })
+                      }
                     />
                     <AlphaPicker
                       color={foregroundColorValue}
-                      onChange={({ rgb: { r, g, b, a } }) => {
-                        bodyPixControl.setForegroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) });
-                        triggerReRender();
-                      }}
+                      onChange={({ rgb: { r, g, b, a } }) =>
+                        handleChangeForegroundColor({ r, g, b, a: Math.round((a ?? 1) * 255) })
+                      }
                       css={css`
                         margin-top: 12px;
                       `}
@@ -382,11 +359,8 @@ const App: React.VFC = () => {
                       min={0}
                       max={1}
                       step="0.1"
-                      value={opacity}
-                      onChange={(e) => {
-                        bodyPixControl.setOpacity(Number(e.target.value));
-                        triggerReRender();
-                      }}
+                      value={opacityState}
+                      onChange={(e) => handleChangeOpacity(Number(e.target.value))}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -398,11 +372,8 @@ const App: React.VFC = () => {
                       type="number"
                       min={0}
                       max={20}
-                      value={maskBlurAmount}
-                      onChange={(e) => {
-                        bodyPixControl.setMaskBlurAmount(Number(e.target.value));
-                        triggerReRender();
-                      }}
+                      value={maskBlurAmountState}
+                      onChange={(e) => handleChangeMaskBlurAmount(Number(e.target.value))}
                     />
                   </Table.Cell>
                 </Table.Row>
@@ -412,11 +383,8 @@ const App: React.VFC = () => {
                   <Table.Cell>
                     <Checkbox
                       toggle
-                      checked={flipHorizontal}
-                      onChange={async () => {
-                        bodyPixControl.setFlipHorizontal(!flipHorizontal);
-                        triggerReRender();
-                      }}
+                      checked={flipHorizontalState}
+                      onChange={async () => handleChangeFlipHorizontal(!flipHorizontalState)}
                     />
                   </Table.Cell>
                 </Table.Row>
