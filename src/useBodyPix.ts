@@ -2,6 +2,12 @@ import "@tensorflow/tfjs";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+declare global {
+  interface HTMLCanvasElement {
+    captureStream(frameRate?: number): MediaStream;
+  }
+}
+
 type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
@@ -10,8 +16,19 @@ export const useBodyPix = () => {
   const [height] = useState(240);
 
   const isMountedRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const videoElement = document.createElement("video");
+  videoElement.width = width;
+  videoElement.height = height;
+  videoElement.autoplay = true;
+  const videoRef = useRef(videoElement);
+
+  const canvasElement = document.createElement("canvas");
+  canvasElement.width = width;
+  canvasElement.height = height;
+  const canvasRef = useRef(canvasElement);
+
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
 
   const [mediaStreamState, setMediaStreamState] = useState<MediaStream | null>(null);
   const mediaStreamRef = useRef(mediaStreamState);
@@ -100,7 +117,7 @@ export const useBodyPix = () => {
   const segmentPerson = async () => {
     const bodyPixNet = bodyPixNetRef.current;
     const video = videoRef.current;
-    if (bodyPixNet && video) {
+    if (bodyPixNet) {
       return await bodyPixNet.segmentPerson(video, {
         internalResolution: internalResolutionRef.current,
         segmentationThreshold: segmentationThresholdRef.current,
@@ -114,10 +131,8 @@ export const useBodyPix = () => {
   const drawNormal = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (canvas && video) {
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(video, 0, 0);
-    }
+    const ctx = canvas?.getContext("2d");
+    ctx?.drawImage(video, 0, 0);
   };
 
   const drawBokeh = async () => {
@@ -125,7 +140,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (canvas && video && segmentation) {
+    if (segmentation) {
       bodyPix.drawBokehEffect(
         canvas,
         video,
@@ -142,7 +157,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (canvas && video && segmentation) {
+    if (segmentation) {
       const backgroundDarkeningMask = bodyPix.toMask(
         segmentation,
         foregroundColorRef.current,
@@ -212,6 +227,13 @@ export const useBodyPix = () => {
         await renderCanvas();
         setLoading(false);
       };
+    }
+
+    const canvas = canvasRef.current;
+    const previewVideo = previewVideoRef.current;
+    if (canvas && previewVideo) {
+      const canvasStream = canvas.captureStream(20);
+      previewVideo.srcObject = canvasStream;
     }
   };
 
@@ -332,6 +354,7 @@ export const useBodyPix = () => {
     height,
     videoRef,
     canvasRef,
+    previewVideoRef,
     loading,
     hasMediaStream,
     effectTypeState,

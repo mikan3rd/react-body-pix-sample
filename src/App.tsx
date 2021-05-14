@@ -20,8 +20,7 @@ const App: React.VFC = () => {
   const {
     width,
     height,
-    videoRef,
-    canvasRef,
+    previewVideoRef,
     loading,
     effectTypeState,
     hasMediaStream,
@@ -101,8 +100,7 @@ const App: React.VFC = () => {
             }
           `}
         />
-        <video ref={videoRef} width={width} height={height} autoPlay hidden />
-        <canvas ref={canvasRef} width={width} height={height} />
+        <video ref={previewVideoRef} width={width} height={height} autoPlay />
 
         <Dimmer active={loading}>
           <Loader />
