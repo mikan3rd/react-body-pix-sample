@@ -1,6 +1,6 @@
 import "@tensorflow/tfjs";
 import * as bodyPix from "@tensorflow-models/body-pix";
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
@@ -9,10 +9,9 @@ export const useBodyPix = () => {
   const [width] = useState(320);
   const [height] = useState(240);
 
+  const isMountedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const video = videoRef.current;
-  const canvas = canvasRef.current;
 
   const [mediaStreamState, setMediaStreamState] = useState<MediaStream | null>(null);
   const mediaStreamRef = useRef(mediaStreamState);
@@ -21,14 +20,13 @@ export const useBodyPix = () => {
   const effectTypeRef = useRef(effectTypeState);
 
   const bodyPixNetRef = useRef<bodyPix.BodyPix | null>(null);
-  const bodyPixNet = bodyPixNetRef.current;
 
   const [loading, setLoading] = useState(false);
 
   // bodypix
   const [architecture, setArchitecture] = useState<ModelConfig["architecture"]>("MobileNetV1");
-  const [outputStride, setOutputStride] = useState<ModelConfig["outputStride"]>(16);
-  const [multiplier, setMultiplier] = useState<NonNullable<ModelConfig["multiplier"]>>(1.0);
+  const [outputStride] = useState<ModelConfig["outputStride"]>(16);
+  const [multiplier] = useState<NonNullable<ModelConfig["multiplier"]>>(1.0);
   const [quantBytes, setQuantBytes] = useState<NonNullable<ModelConfig["quantBytes"]>>(4);
 
   // segmentPerson
@@ -100,6 +98,8 @@ export const useBodyPix = () => {
   }, [foregroundColorState]);
 
   const segmentPerson = async () => {
+    const bodyPixNet = bodyPixNetRef.current;
+    const video = videoRef.current;
     if (bodyPixNet && video) {
       return await bodyPixNet.segmentPerson(video, {
         internalResolution: internalResolutionRef.current,
@@ -112,6 +112,8 @@ export const useBodyPix = () => {
   };
 
   const drawNormal = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
     if (canvas && video) {
       const ctx = canvas.getContext("2d");
       ctx?.drawImage(video, 0, 0);
@@ -120,6 +122,9 @@ export const useBodyPix = () => {
 
   const drawBokeh = async () => {
     const segmentation = await segmentPerson();
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
     if (canvas && video && segmentation) {
       bodyPix.drawBokehEffect(
         canvas,
@@ -134,6 +139,9 @@ export const useBodyPix = () => {
 
   const drawMask = async () => {
     const segmentation = await segmentPerson();
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
     if (canvas && video && segmentation) {
       const backgroundDarkeningMask = bodyPix.toMask(
         segmentation,
@@ -197,6 +205,7 @@ export const useBodyPix = () => {
     });
     setMediaStream(mediaStream);
 
+    const video = videoRef.current;
     if (video) {
       video.srcObject = mediaStream;
       video.onloadeddata = async () => {
@@ -209,6 +218,8 @@ export const useBodyPix = () => {
   const stopVideo = () => {
     mediaStreamState?.getTracks().forEach((track) => track.stop());
     setMediaStream(null);
+
+    const video = videoRef.current;
     if (video) {
       video.onloadeddata = null;
     }
@@ -219,7 +230,7 @@ export const useBodyPix = () => {
     setEffectTypeState(effectType);
   };
 
-  const loadBodyPix = async () => {
+  const loadBodyPix = useCallback(async () => {
     setLoading(true);
 
     bodyPixNetRef.current = await bodyPix.load({
@@ -230,9 +241,10 @@ export const useBodyPix = () => {
     });
 
     setLoading(false);
-  };
+  }, [architecture, multiplier, outputStride, quantBytes]);
 
   const handleChangeEffectType = async (effectType: typeof effectTypeState) => {
+    const bodyPixNet = bodyPixNetRef.current;
     if (effectType !== "off" && !bodyPixNet) {
       await loadBodyPix();
     }
@@ -241,73 +253,79 @@ export const useBodyPix = () => {
 
   const handleChangeArchitecture = async (nextArchitecture: typeof architecture) => {
     setArchitecture(nextArchitecture);
-    await loadBodyPix();
   };
 
   const handleChangeQuantBytes = async (nextQuantBytes: typeof quantBytes) => {
     setQuantBytes(nextQuantBytes);
-    await loadBodyPix();
   };
 
   const handleChangeInternalResolution = (internalResolution: typeof internalResolutionState) => {
-    setInternalResolutionState(internalResolution);
     internalResolutionRef.current = internalResolution;
+    setInternalResolutionState(internalResolution);
   };
 
   const handleChangeSegmentationThreshold = (segmentationThreshold: typeof segmentationThresholdState) => {
-    setSegmentationThresholdState(segmentationThreshold);
     segmentationThresholdRef.current = segmentationThreshold;
+    setSegmentationThresholdState(segmentationThreshold);
   };
 
   const handleChangeMaxDetections = (maxDetections: typeof maxDetectionsState) => {
-    setMaxDetectionsState(maxDetections);
     maxDetectionsRef.current = maxDetections;
+    setMaxDetectionsState(maxDetections);
   };
 
   const handleChangeScoreThreshold = (scoreThreshold: typeof scoreThresholdState) => {
-    setScoreThresholdState(scoreThreshold);
     scoreThresholdRef.current = scoreThreshold;
+    setScoreThresholdState(scoreThreshold);
   };
 
   const handleChangeNmsRadius = (nmsRadius: typeof nmsRadiusState) => {
-    setNmsRadiusState(nmsRadius);
     nmsRadiusRef.current = nmsRadius;
+    setNmsRadiusState(nmsRadius);
   };
 
   const handleChangeBackgroundBlurAmount = (backgroundBlurAmount: typeof backgroundBlurAmountState) => {
-    setBackgroundBlurAmountState(backgroundBlurAmount);
     backgroundBlurAmountRef.current = backgroundBlurAmount;
+    setBackgroundBlurAmountState(backgroundBlurAmount);
   };
 
   const handleChangeEdgeBlurAmount = (edgeBlurAmount: typeof edgeBlurAmountState) => {
-    setEdgeBlurAmountState(edgeBlurAmount);
     edgeBlurAmountRef.current = edgeBlurAmount;
+    setEdgeBlurAmountState(edgeBlurAmount);
   };
 
   const handleChangeFlipHorizontal = (flipHorizontal: typeof flipHorizontalState) => {
-    setFlipHorizontalState(flipHorizontal);
     flipHorizontalRef.current = flipHorizontal;
+    setFlipHorizontalState(flipHorizontal);
   };
 
   const handleChangeBackgroundColor = (backgroundColor: typeof backgroundColorState) => {
-    setBackgroundColorState(backgroundColor);
     backgroundColorRef.current = backgroundColor;
+    setBackgroundColorState(backgroundColor);
   };
 
   const handleChangeForegroundColor = (foregroundColor: typeof foregroundColorState) => {
-    setForegroundColorState(foregroundColor);
     foregroundColorRef.current = foregroundColor;
+    setForegroundColorState(foregroundColor);
   };
 
   const handleChangeOpacity = (opacity: typeof opacityState) => {
-    setOpacity(opacity);
     opacityRef.current = opacity;
+    setOpacity(opacity);
   };
 
   const handleChangeMaskBlurAmount = (maskBlurAmount: typeof maskBlurAmountState) => {
-    setMaskBlurAmountState(maskBlurAmount);
     maskBlurAmountRef.current = maskBlurAmount;
+    setMaskBlurAmountState(maskBlurAmount);
   };
+
+  useEffect(() => {
+    if (isMountedRef.current) {
+      loadBodyPix();
+    } else {
+      isMountedRef.current = true;
+    }
+  }, [architecture, outputStride, multiplier, quantBytes, loadBodyPix]);
 
   return {
     width,
