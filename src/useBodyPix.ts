@@ -2,6 +2,12 @@ import "@tensorflow/tfjs";
 import * as bodyPix from "@tensorflow-models/body-pix";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+declare global {
+  interface HTMLCanvasElement {
+    captureStream(frameRate?: number): MediaStream;
+  }
+}
+
 type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
@@ -12,6 +18,7 @@ export const useBodyPix = () => {
   const isMountedRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
 
   const [mediaStreamState, setMediaStreamState] = useState<MediaStream | null>(null);
   const mediaStreamRef = useRef(mediaStreamState);
@@ -213,6 +220,13 @@ export const useBodyPix = () => {
         setLoading(false);
       };
     }
+
+    const canvas = canvasRef.current;
+    const previewVideo = previewVideoRef.current;
+    if (canvas && previewVideo) {
+      const canvasStream = canvas.captureStream(20);
+      previewVideo.srcObject = canvasStream;
+    }
   };
 
   const stopVideo = () => {
@@ -332,6 +346,7 @@ export const useBodyPix = () => {
     height,
     videoRef,
     canvasRef,
+    previewVideoRef,
     loading,
     hasMediaStream,
     effectTypeState,
