@@ -12,8 +12,8 @@ type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
 export const useBodyPix = () => {
-  const [width] = useState(320);
-  const [height] = useState(240);
+  const [width] = useState(160);
+  const [height] = useState(120);
 
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
@@ -21,10 +21,11 @@ export const useBodyPix = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const canvasElement = document.createElement("canvas");
-  canvasElement.width = width;
-  canvasElement.height = height;
-  const canvasRef = useRef(canvasElement);
+  // const canvasElement = document.createElement("canvas");
+  // canvasElement.width = width;
+  // canvasElement.height = height;
+  // const canvasRef = useRef(canvasElement);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const previewVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -140,7 +141,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation && video) {
+    if (segmentation && video && canvas) {
       bodyPix.drawBokehEffect(
         canvas,
         video,
@@ -157,7 +158,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation && video) {
+    if (segmentation && video && canvas) {
       const backgroundDarkeningMask = bodyPix.toMask(
         segmentation,
         foregroundColorRef.current,
@@ -414,6 +415,7 @@ export const useBodyPix = () => {
     height,
     devices,
     videoRef,
+    canvasRef,
     previewVideoRef,
     loading,
     hasMediaStream,

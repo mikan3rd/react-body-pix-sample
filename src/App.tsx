@@ -21,6 +21,7 @@ const App: React.VFC = () => {
     width,
     height,
     videoRef,
+    canvasRef,
     previewVideoRef,
     loading,
     effectTypeState,
@@ -122,6 +123,7 @@ const App: React.VFC = () => {
             //   left: 0;
             // `}
           />
+          <canvas ref={canvasRef} width={width} height={height} />
           <video
             ref={previewVideoRef}
             width={width}
