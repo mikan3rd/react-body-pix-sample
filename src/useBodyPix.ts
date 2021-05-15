@@ -17,10 +17,8 @@ export const useBodyPix = () => {
 
   const isMountedRef = useRef(false);
 
-  const videoElement = document.createElement("video");
-  videoElement.width = width;
-  videoElement.height = height;
-  const videoRef = useRef(videoElement);
+  // iOSの場合に document.createElement("video") で用意した非表示要素だとvideoを再生できないため
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const canvasElement = document.createElement("canvas");
   canvasElement.width = width;
@@ -116,7 +114,7 @@ export const useBodyPix = () => {
   const segmentPerson = async () => {
     const bodyPixNet = bodyPixNetRef.current;
     const video = videoRef.current;
-    if (bodyPixNet) {
+    if (bodyPixNet && video) {
       return await bodyPixNet.segmentPerson(video, {
         internalResolution: internalResolutionRef.current,
         segmentationThreshold: segmentationThresholdRef.current,
@@ -131,7 +129,9 @@ export const useBodyPix = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    ctx?.drawImage(video, 0, 0);
+    if (video) {
+      ctx?.drawImage(video, 0, 0);
+    }
   };
 
   const drawBokeh = async () => {
@@ -139,7 +139,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation) {
+    if (segmentation && video) {
       bodyPix.drawBokehEffect(
         canvas,
         video,
@@ -156,7 +156,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation) {
+    if (segmentation && video) {
       const backgroundDarkeningMask = bodyPix.toMask(
         segmentation,
         foregroundColorRef.current,
@@ -220,16 +220,17 @@ export const useBodyPix = () => {
     setMediaStream(mediaStream);
 
     const video = videoRef.current;
-    video.srcObject = mediaStream;
-    video.onloadeddata = async () => {
-      console.log("onloadeddata");
-      await video.play().catch((e) => {
-        console.error(e);
-        alert(e);
-      });
-      await renderCanvas();
-      setLoading(false);
-    };
+    if (video) {
+      video.onloadeddata = async () => {
+        await video.play().catch((e) => {
+          console.error(e);
+          alert(e);
+        });
+        await renderCanvas();
+        setLoading(false);
+      };
+      video.srcObject = mediaStream;
+    }
 
     const canvas = canvasRef.current;
     const previewVideo = previewVideoRef.current;
@@ -354,6 +355,7 @@ export const useBodyPix = () => {
   return {
     width,
     height,
+    videoRef,
     previewVideoRef,
     loading,
     hasMediaStream,
