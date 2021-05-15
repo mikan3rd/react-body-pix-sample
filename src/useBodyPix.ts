@@ -20,7 +20,6 @@ export const useBodyPix = () => {
   const videoElement = document.createElement("video");
   videoElement.width = width;
   videoElement.height = height;
-  videoElement.autoplay = true;
   const videoRef = useRef(videoElement);
 
   const canvasElement = document.createElement("canvas");
@@ -221,18 +220,17 @@ export const useBodyPix = () => {
     setMediaStream(mediaStream);
 
     const video = videoRef.current;
-    if (video) {
-      video.srcObject = mediaStream;
-      video.onloadeddata = async () => {
-        await renderCanvas();
-        setLoading(false);
-      };
-    }
+    video.srcObject = mediaStream;
+    video.onloadeddata = async () => {
+      await video.play();
+      await renderCanvas();
+      setLoading(false);
+    };
 
     const canvas = canvasRef.current;
     const previewVideo = previewVideoRef.current;
     if (canvas && previewVideo) {
-      const canvasStream = canvas.captureStream(20);
+      const canvasStream = canvas.captureStream();
       previewVideo.srcObject = canvasStream;
     }
   };
@@ -352,8 +350,6 @@ export const useBodyPix = () => {
   return {
     width,
     height,
-    videoRef,
-    canvasRef,
     previewVideoRef,
     loading,
     hasMediaStream,
