@@ -207,6 +207,11 @@ export const useBodyPix = () => {
   };
 
   const startVideo = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Browser API navigator.mediaDevices.getUserMedia not available");
+      return;
+    }
+
     setLoading(true);
 
     const mediaStream = await navigator.mediaDevices.getUserMedia({
