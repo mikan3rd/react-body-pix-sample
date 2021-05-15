@@ -15,6 +15,8 @@ export const useBodyPix = () => {
   const [width] = useState(320);
   const [height] = useState(240);
 
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+
   const isMountedRef = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -179,6 +181,8 @@ export const useBodyPix = () => {
       return;
     }
 
+    console.log("!!!");
+
     switch (effectTypeRef.current) {
       case "off":
         drawNormal();
@@ -201,26 +205,58 @@ export const useBodyPix = () => {
     requestAnimationFrame(renderCanvas);
   };
 
+  const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Browser API navigator.mediaDevices.getUserMedia not available");
+      return;
+    }
+    return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+  };
+
+  const stopVideoTrack = (mediaStream: MediaStream) => {
+    mediaStream.getTracks().forEach((track) => track.stop());
+  };
+
+  const requestDevicePermission = useCallback(async () => {
+    const mediaStream = await getUserMedia({ video: true, audio: true });
+    if (!mediaStream) {
+      return;
+    }
+    stopVideoTrack(mediaStream);
+  }, []);
+
+  const setCurrentDevices = useCallback(async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      alert("enumerateDevices() not supported.");
+      return;
+    }
+
+    const nextDevices = await navigator.mediaDevices.enumerateDevices();
+    setDevices(nextDevices);
+    console.log(nextDevices); // TODO
+  }, []);
+
   const setMediaStream = (mediaStream: typeof mediaStreamState) => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
   };
 
   const startVideo = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      alert("Browser API navigator.mediaDevices.getUserMedia not available");
-      return;
-    }
-
     setLoading(true);
 
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
+    const mediaStream = await getUserMedia({
       video: {
         width,
         height,
       },
       audio: false, // TODO
     });
+
+    if (!mediaStream) {
+      setLoading(false);
+      return;
+    }
+
     setMediaStream(mediaStream);
 
     const video = videoRef.current;
@@ -241,7 +277,10 @@ export const useBodyPix = () => {
   };
 
   const stopVideo = () => {
-    mediaStreamState?.getTracks().forEach((track) => track.stop());
+    if (mediaStreamState) {
+      stopVideoTrack(mediaStreamState);
+    }
+
     setMediaStream(null);
 
     const video = videoRef.current;
@@ -352,9 +391,26 @@ export const useBodyPix = () => {
     }
   }, [architecture, outputStride, multiplier, quantBytes, loadBodyPix]);
 
+  useEffect(() => {
+    const setFirstDevices = async () => {
+      await requestDevicePermission();
+      await setCurrentDevices();
+    };
+
+    setFirstDevices();
+  }, [requestDevicePermission, setCurrentDevices]);
+
+  useEffect(() => {
+    navigator.mediaDevices.ondevicechange = setCurrentDevices;
+    return () => {
+      navigator.mediaDevices.ondevicechange = null;
+    };
+  }, [setCurrentDevices]);
+
   return {
     width,
     height,
+    devices,
     videoRef,
     previewVideoRef,
     loading,
