@@ -272,6 +272,7 @@ export const useBodyPix = () => {
     const previewVideo = previewVideoRef.current;
     if (canvas && previewVideo) {
       const canvasStream = canvas.captureStream();
+      console.log({ canvasStream });
       previewVideo.srcObject = canvasStream;
     }
   };
@@ -401,6 +402,7 @@ export const useBodyPix = () => {
   }, [requestDevicePermission, setCurrentDevices]);
 
   useEffect(() => {
+    // Safariの場合、 ondevicechange に渡す関数内で getUserMedia() を呼ぶと無限ループする不具合があるため注意
     navigator.mediaDevices.ondevicechange = setCurrentDevices;
     return () => {
       navigator.mediaDevices.ondevicechange = null;
