@@ -12,21 +12,20 @@ type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
 export const useBodyPix = () => {
-  const [width] = useState(320);
-  const [height] = useState(240);
+  const [width] = useState(160);
+  const [height] = useState(120);
+
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
   const isMountedRef = useRef(false);
 
-  const videoElement = document.createElement("video");
-  videoElement.width = width;
-  videoElement.height = height;
-  videoElement.autoplay = true;
-  const videoRef = useRef(videoElement);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-  const canvasElement = document.createElement("canvas");
-  canvasElement.width = width;
-  canvasElement.height = height;
-  const canvasRef = useRef(canvasElement);
+  // const canvasElement = document.createElement("canvas");
+  // canvasElement.width = width;
+  // canvasElement.height = height;
+  // const canvasRef = useRef(canvasElement);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const previewVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -117,7 +116,7 @@ export const useBodyPix = () => {
   const segmentPerson = async () => {
     const bodyPixNet = bodyPixNetRef.current;
     const video = videoRef.current;
-    if (bodyPixNet) {
+    if (bodyPixNet && video) {
       return await bodyPixNet.segmentPerson(video, {
         internalResolution: internalResolutionRef.current,
         segmentationThreshold: segmentationThresholdRef.current,
@@ -132,7 +131,9 @@ export const useBodyPix = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    ctx?.drawImage(video, 0, 0);
+    if (video) {
+      ctx?.drawImage(video, 0, 0);
+    }
   };
 
   const drawBokeh = async () => {
@@ -140,7 +141,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation) {
+    if (segmentation && video && canvas) {
       bodyPix.drawBokehEffect(
         canvas,
         video,
@@ -157,7 +158,7 @@ export const useBodyPix = () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (segmentation) {
+    if (segmentation && video && canvas) {
       const backgroundDarkeningMask = bodyPix.toMask(
         segmentation,
         foregroundColorRef.current,
@@ -203,6 +204,37 @@ export const useBodyPix = () => {
     requestAnimationFrame(renderCanvas);
   };
 
+  const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert("Browser API navigator.mediaDevices.getUserMedia not available");
+      return;
+    }
+    return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+  };
+
+  const stopVideoTrack = (mediaStream: MediaStream) => {
+    mediaStream.getTracks().forEach((track) => track.stop());
+  };
+
+  const requestDevicePermission = useCallback(async () => {
+    const mediaStream = await getUserMedia({ video: true, audio: true });
+    if (!mediaStream) {
+      return;
+    }
+    stopVideoTrack(mediaStream);
+  }, []);
+
+  const setCurrentDevices = useCallback(async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      alert("enumerateDevices() not supported.");
+      return;
+    }
+
+    const nextDevices = await navigator.mediaDevices.enumerateDevices();
+    setDevices(nextDevices);
+    console.log(nextDevices); // TODO
+  }, []);
+
   const setMediaStream = (mediaStream: typeof mediaStreamState) => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
@@ -211,34 +243,44 @@ export const useBodyPix = () => {
   const startVideo = async () => {
     setLoading(true);
 
-    const mediaStream = await navigator.mediaDevices.getUserMedia({
+    const mediaStream = await getUserMedia({
       video: {
         width,
         height,
       },
       audio: false, // TODO
     });
+
+    if (!mediaStream) {
+      setLoading(false);
+      return;
+    }
+
     setMediaStream(mediaStream);
 
     const video = videoRef.current;
     if (video) {
-      video.srcObject = mediaStream;
       video.onloadeddata = async () => {
         await renderCanvas();
         setLoading(false);
       };
+      video.srcObject = mediaStream;
     }
 
     const canvas = canvasRef.current;
     const previewVideo = previewVideoRef.current;
     if (canvas && previewVideo) {
-      const canvasStream = canvas.captureStream(20);
+      const canvasStream = canvas.captureStream();
+      console.log({ canvasStream });
       previewVideo.srcObject = canvasStream;
     }
   };
 
   const stopVideo = () => {
-    mediaStreamState?.getTracks().forEach((track) => track.stop());
+    if (mediaStreamState) {
+      stopVideoTrack(mediaStreamState);
+    }
+
     setMediaStream(null);
 
     const video = videoRef.current;
@@ -349,9 +391,27 @@ export const useBodyPix = () => {
     }
   }, [architecture, outputStride, multiplier, quantBytes, loadBodyPix]);
 
+  useEffect(() => {
+    const setFirstDevices = async () => {
+      await requestDevicePermission();
+      await setCurrentDevices();
+    };
+
+    setFirstDevices();
+  }, [requestDevicePermission, setCurrentDevices]);
+
+  useEffect(() => {
+    // Safariの場合、 ondevicechange に渡す関数内で getUserMedia() を呼ぶと無限ループする不具合があるため注意
+    navigator.mediaDevices.ondevicechange = setCurrentDevices;
+    return () => {
+      navigator.mediaDevices.ondevicechange = null;
+    };
+  }, [setCurrentDevices]);
+
   return {
     width,
     height,
+    devices,
     videoRef,
     canvasRef,
     previewVideoRef,

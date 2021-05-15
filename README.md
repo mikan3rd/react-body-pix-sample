@@ -16,3 +16,4 @@ https://react-body-pix-sample.vercel.app
 - [ ] デバイス切り替え
 - [ ] MediaRecorder
 - [ ] 縦横幅のレスポンシブ対応
+- [ ] iPhone Safariで動作しない問題

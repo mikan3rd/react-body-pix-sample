@@ -20,6 +20,8 @@ const App: React.VFC = () => {
   const {
     width,
     height,
+    videoRef,
+    canvasRef,
     previewVideoRef,
     loading,
     effectTypeState,
@@ -100,7 +102,42 @@ const App: React.VFC = () => {
             }
           `}
         />
-        <video ref={previewVideoRef} width={width} height={height} autoPlay />
+        <div
+          css={css`
+            position: relative;
+            /* width: ${width}px;
+            height: ${height}px; */
+          `}
+        >
+          {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
+          <video
+            ref={videoRef}
+            width={width}
+            height={height}
+            autoPlay
+            muted
+            playsInline
+            // css={css`
+            //   position: absolute;
+            //   top: 0;
+            //   left: 0;
+            // `}
+          />
+          <canvas ref={canvasRef} width={width} height={height} />
+          <video
+            ref={previewVideoRef}
+            width={width}
+            height={height}
+            autoPlay
+            muted
+            playsInline
+            // css={css`
+            //   position: absolute;
+            //   top: 0;
+            //   left: 0;
+            // `}
+          />
+        </div>
 
         <Dimmer active={loading}>
           <Loader />
