@@ -17,7 +17,6 @@ export const useBodyPix = () => {
 
   const isMountedRef = useRef(false);
 
-  // iOSの場合に document.createElement("video") で用意した非表示要素だとvideoを再生できないため
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const canvasElement = document.createElement("canvas");
@@ -222,10 +221,6 @@ export const useBodyPix = () => {
     const video = videoRef.current;
     if (video) {
       video.onloadeddata = async () => {
-        await video.play().catch((e) => {
-          console.error(e);
-          alert(e);
-        });
         await renderCanvas();
         setLoading(false);
       };

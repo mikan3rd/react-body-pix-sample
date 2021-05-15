@@ -101,8 +101,37 @@ const App: React.VFC = () => {
             }
           `}
         />
-        <video ref={videoRef} width={width} height={height} autoPlay hidden />
-        <video ref={previewVideoRef} width={width} height={height} autoPlay />
+        <div
+          css={css`
+            position: relative;
+            width: ${width}px;
+            height: ${height}px;
+          `}
+        >
+          {/* iOSの場合に document.createElement("video") で用意した非表示要素だとvideoを再生できないため */}
+          <video
+            ref={videoRef}
+            width={width}
+            height={height}
+            autoPlay
+            css={css`
+              position: absolute;
+              top: 0;
+              left: 0;
+            `}
+          />
+          <video
+            ref={previewVideoRef}
+            width={width}
+            height={height}
+            autoPlay
+            css={css`
+              position: absolute;
+              top: 0;
+              left: 0;
+            `}
+          />
+        </div>
 
         <Dimmer active={loading}>
           <Loader />
