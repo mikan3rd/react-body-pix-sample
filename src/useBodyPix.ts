@@ -182,8 +182,6 @@ export const useBodyPix = () => {
       return;
     }
 
-    console.log("!!!");
-
     switch (effectTypeRef.current) {
       case "off":
         drawNormal();
