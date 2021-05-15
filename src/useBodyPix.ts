@@ -222,7 +222,11 @@ export const useBodyPix = () => {
     const video = videoRef.current;
     video.srcObject = mediaStream;
     video.onloadeddata = async () => {
-      await video.play();
+      console.log("onloadeddata");
+      await video.play().catch((e) => {
+        console.error(e);
+        alert(e);
+      });
       await renderCanvas();
       setLoading(false);
     };
