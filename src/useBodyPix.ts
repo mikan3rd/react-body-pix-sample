@@ -265,6 +265,8 @@ export const useBodyPix = () => {
     const mediaStream = await getUserMedia({
       video: {
         deviceId: videoDeviceId,
+        width,
+        height,
       },
       audio: {
         deviceId: audioDeviceId,
@@ -277,15 +279,15 @@ export const useBodyPix = () => {
     }
 
     setMediaStream(mediaStream);
-    mediaStream.getVideoTracks().forEach((track) => {
-      const { width, height } = track.getSettings();
-      if (width) {
-        setWidth(width);
-      }
-      if (height) {
-        setHeight(height);
-      }
-    });
+    // mediaStream.getVideoTracks().forEach((track) => {
+    //   const { width, height } = track.getSettings();
+    //   if (width) {
+    //     setWidth(width);
+    //   }
+    //   if (height) {
+    //     setHeight(height);
+    //   }
+    // });
 
     const video = videoRef.current;
     if (video) {

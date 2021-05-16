@@ -143,6 +143,7 @@ const App: React.VFC = () => {
             /* width: ${width}px;
             height: ${height}px; */
             margin-top: 8px;
+            object-fit: cover;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
@@ -153,13 +154,20 @@ const App: React.VFC = () => {
             autoPlay
             muted
             playsInline
-            // css={css`
-            //   position: absolute;
-            //   top: 0;
-            //   left: 0;
-            // `}
+            css={css`
+              /* position: absolute;
+              top: 0;
+              left: 0; */
+            `}
           />
-          <canvas ref={canvasRef} width={width} height={height} />
+          <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            css={css`
+              object-fit: cover;
+            `}
+          />
           <video
             ref={previewVideoRef}
             width={width}
@@ -167,11 +175,12 @@ const App: React.VFC = () => {
             autoPlay
             muted
             playsInline
-            // css={css`
-            //   position: absolute;
-            //   top: 0;
-            //   left: 0;
-            // `}
+            css={css`
+              /* position: absolute;
+              top: 0;
+              left: 0; */
+              object-fit: cover;
+            `}
           />
         </div>
 
