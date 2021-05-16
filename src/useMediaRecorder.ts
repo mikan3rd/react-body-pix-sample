@@ -48,7 +48,23 @@ export const useMediaRecorder = () => {
     }
   }, [mediaRecorder]);
 
+  const checkMediaType = () => {
+    const types = [
+      "video/webm",
+      "audio/webm",
+      "video/webm;codecs=vp8",
+      "video/webm;codecs=daala",
+      "video/webm;codecs=h264",
+      "audio/webm;codecs=opus",
+      "video/mpeg",
+    ];
+
+    for (const i in types) {
+      console.log(types[i], MediaRecorder.isTypeSupported(types[i]) ? "OK!!" : "NO...");
+    }
+  };
+
   const isRecording = useMemo(() => mediaRecorder !== null, [mediaRecorder]);
 
-  return { isRecording, startMediaRecord, stopMediaRecord };
+  return { isRecording, startMediaRecord, stopMediaRecord, checkMediaType };
 };

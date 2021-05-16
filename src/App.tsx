@@ -2,6 +2,7 @@ import { css } from "@emotion/react";
 import React from "react";
 import { AlphaPicker, CompactPicker } from "react-color";
 import {
+  Button,
   Checkbox,
   Container,
   Dimmer,
@@ -71,7 +72,7 @@ const App: React.VFC = () => {
     handleChangeMaskBlurAmount,
   } = useBodyPix();
 
-  const { isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
+  const { isRecording, startMediaRecord, stopMediaRecord, checkMediaType } = useMediaRecorder();
 
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
@@ -166,6 +167,7 @@ const App: React.VFC = () => {
             }
           `}
         />
+        <Button content="Check" onClick={checkMediaType} />
         <div
           css={css`
             position: relative;
