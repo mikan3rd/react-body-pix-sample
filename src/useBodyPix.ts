@@ -18,8 +18,8 @@ export const useBodyPix = () => {
   const [videoDeviceId, setVideoDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
   const [audioDeviceId, setAudioDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
 
-  const [width] = useState(160);
-  const [height] = useState(120);
+  const [width] = useState(320);
+  const [height] = useState(240);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
