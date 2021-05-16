@@ -15,6 +15,7 @@ import {
 } from "semantic-ui-react";
 
 import { useBodyPix } from "./useBodyPix";
+import { useMediaRecorder } from "./useMediaRecorder";
 
 const App: React.VFC = () => {
   const {
@@ -29,6 +30,7 @@ const App: React.VFC = () => {
     previewVideoRef,
     loading,
     effectTypeState,
+    mediaStreamState,
     hasMediaStream,
     architecture,
     architectureOptions,
@@ -69,11 +71,25 @@ const App: React.VFC = () => {
     handleChangeMaskBlurAmount,
   } = useBodyPix();
 
+  const { isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
+
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
       stopVideo();
     } else {
       await startVideo();
+    }
+  };
+
+  const handleToggleMediaRecord = () => {
+    if (isRecording) {
+      stopMediaRecord();
+    } else {
+      if (mediaStreamState) {
+        startMediaRecord(mediaStreamState);
+      } else {
+        alert("Please start video");
+      }
     }
   };
 
@@ -130,6 +146,19 @@ const App: React.VFC = () => {
           checked={hasMediaStream}
           label="Display Video"
           onChange={handleToggleVideo}
+          css={css`
+            &&& {
+              display: block;
+              margin-top: 8px;
+            }
+          `}
+        />
+        <Checkbox
+          toggle
+          checked={isRecording}
+          disabled={!hasMediaStream}
+          label="Record Video"
+          onChange={handleToggleMediaRecord}
           css={css`
             &&& {
               display: block;

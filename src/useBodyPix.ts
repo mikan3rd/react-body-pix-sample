@@ -470,6 +470,7 @@ export const useBodyPix = () => {
     canvasRef,
     previewVideoRef,
     loading,
+    mediaStreamState,
     hasMediaStream,
     effectTypeState,
     architecture,
