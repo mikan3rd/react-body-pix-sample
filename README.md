@@ -13,7 +13,7 @@ https://react-body-pix-sample.vercel.app
 - [ ] useCallback
 - [ ] useStateに置き換え可能か
 - [ ] 音量調整
-- [ ] デバイス切り替え
+- [x] デバイス切り替え
 - [ ] MediaRecorder
 - [ ] 縦横幅のレスポンシブ対応
 - [ ] iPhone Safariで動作しない問題
