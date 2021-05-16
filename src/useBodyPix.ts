@@ -12,12 +12,14 @@ type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
 export const useBodyPix = () => {
-  const [width] = useState(160);
-  const [height] = useState(120);
+  const isMountedRef = useRef(false);
 
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoDeviceId, setVideoDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
+  const [audioDeviceId, setAudioDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
 
-  const isMountedRef = useRef(false);
+  const [width] = useState(160);
+  const [height] = useState(120);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -84,6 +86,19 @@ export const useBodyPix = () => {
   const backgroundColorRef = useRef(backgroundColorState);
 
   const hasMediaStream = useMemo(() => mediaStreamState !== null, [mediaStreamState]);
+
+  const videoDevices = useMemo(() => devices.filter((device) => device.kind === "videoinput"), [devices]);
+  const audioDevices = useMemo(() => devices.filter((device) => device.kind === "audioinput"), [devices]);
+
+  const videoDeviceOptions = useMemo(
+    () => videoDevices.map((device) => ({ value: device.deviceId, text: device.label })),
+    [videoDevices],
+  );
+
+  const audioDeviceOptions = useMemo(
+    () => audioDevices.map((device) => ({ value: device.deviceId, text: device.label })),
+    [audioDevices],
+  );
 
   const architectureOptions: { text: typeof architecture; value: typeof architecture }[] = useMemo(
     () => [
@@ -232,7 +247,6 @@ export const useBodyPix = () => {
 
     const nextDevices = await navigator.mediaDevices.enumerateDevices();
     setDevices(nextDevices);
-    console.log(nextDevices); // TODO
   }, []);
 
   const setMediaStream = (mediaStream: typeof mediaStreamState) => {
@@ -271,7 +285,6 @@ export const useBodyPix = () => {
     const previewVideo = previewVideoRef.current;
     if (canvas && previewVideo) {
       const canvasStream = canvas.captureStream();
-      console.log({ canvasStream });
       previewVideo.srcObject = canvasStream;
     }
   };
@@ -408,10 +421,26 @@ export const useBodyPix = () => {
     };
   }, [setCurrentDevices]);
 
+  useEffect(() => {
+    if (!videoDeviceId && videoDevices.length > 0) {
+      console.log(videoDevices[0].deviceId);
+      setVideoDeviceId(videoDevices[0].deviceId);
+    }
+  }, [videoDeviceId, videoDevices]);
+
+  useEffect(() => {
+    if (!audioDeviceId && audioDevices.length > 0) {
+      setAudioDeviceId(audioDevices[0].deviceId);
+    }
+  }, [audioDeviceId, audioDevices]);
+
   return {
     width,
     height,
-    devices,
+    videoDeviceId,
+    audioDeviceId,
+    videoDeviceOptions,
+    audioDeviceOptions,
     videoRef,
     canvasRef,
     previewVideoRef,
@@ -436,6 +465,8 @@ export const useBodyPix = () => {
     foregroundColorValue,
     opacityState,
     maskBlurAmountState,
+    setVideoDeviceId,
+    setAudioDeviceId,
     startVideo,
     stopVideo,
     handleChangeArchitecture,
