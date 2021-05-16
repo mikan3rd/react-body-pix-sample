@@ -15,6 +15,7 @@ import {
 } from "semantic-ui-react";
 
 import { useBodyPix } from "./useBodyPix";
+import { useMediaRecorder } from "./useMediaRecorder";
 
 const App: React.VFC = () => {
   const {
@@ -29,6 +30,7 @@ const App: React.VFC = () => {
     previewVideoRef,
     loading,
     effectTypeState,
+    canvasMediaStreamState,
     hasMediaStream,
     architecture,
     architectureOptions,
@@ -69,11 +71,25 @@ const App: React.VFC = () => {
     handleChangeMaskBlurAmount,
   } = useBodyPix();
 
+  const { isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
+
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
       stopVideo();
     } else {
       await startVideo();
+    }
+  };
+
+  const handleToggleMediaRecord = () => {
+    if (isRecording) {
+      stopMediaRecord();
+    } else {
+      if (canvasMediaStreamState) {
+        startMediaRecord(canvasMediaStreamState);
+      } else {
+        alert("Please start video");
+      }
     }
   };
 
@@ -137,11 +153,24 @@ const App: React.VFC = () => {
             }
           `}
         />
+        <Checkbox
+          toggle
+          checked={isRecording}
+          disabled={!hasMediaStream}
+          label="Record Video"
+          onChange={handleToggleMediaRecord}
+          css={css`
+            &&& {
+              display: block;
+              margin-top: 8px;
+            }
+          `}
+        />
         <div
           css={css`
             position: relative;
-            /* width: ${width}px;
-            height: ${height}px; */
+            width: ${width}px;
+            height: ${height}px;
             margin-top: 8px;
           `}
         >
@@ -153,13 +182,22 @@ const App: React.VFC = () => {
             autoPlay
             muted
             playsInline
-            // css={css`
-            //   position: absolute;
-            //   top: 0;
-            //   left: 0;
-            // `}
+            css={css`
+              position: absolute;
+              top: 0;
+              left: 0;
+            `}
           />
-          <canvas ref={canvasRef} width={width} height={height} />
+          <canvas
+            ref={canvasRef}
+            width={width}
+            height={height}
+            css={css`
+              position: absolute;
+              top: 0;
+              left: 0;
+            `}
+          />
           <video
             ref={previewVideoRef}
             width={width}
@@ -167,11 +205,12 @@ const App: React.VFC = () => {
             autoPlay
             muted
             playsInline
-            // css={css`
-            //   position: absolute;
-            //   top: 0;
-            //   left: 0;
-            // `}
+            hidden
+            css={css`
+              position: absolute;
+              top: 0;
+              left: 0;
+            `}
           />
         </div>
 

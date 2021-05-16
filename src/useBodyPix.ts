@@ -18,8 +18,8 @@ export const useBodyPix = () => {
   const [videoDeviceId, setVideoDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
   const [audioDeviceId, setAudioDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
 
-  const [width] = useState(160);
-  const [height] = useState(120);
+  const [width] = useState(320);
+  const [height] = useState(240);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -33,6 +33,8 @@ export const useBodyPix = () => {
 
   const [mediaStreamState, setMediaStreamState] = useState<MediaStream | null>(null);
   const mediaStreamRef = useRef(mediaStreamState);
+
+  const [canvasMediaStreamState, setCanvasMediaStreamState] = useState<MediaStream | null>(null);
 
   const [effectTypeState, setEffectTypeState] = useState<EffectType>("off");
   const effectTypeRef = useRef(effectTypeState);
@@ -264,9 +266,10 @@ export const useBodyPix = () => {
 
     const mediaStream = await getUserMedia({
       video: {
+        deviceId: videoDeviceId,
         width,
         height,
-        deviceId: videoDeviceId,
+        aspectRatio: 1,
       },
       audio: {
         deviceId: audioDeviceId,
@@ -294,6 +297,7 @@ export const useBodyPix = () => {
     if (canvas && previewVideo) {
       const canvasStream = canvas.captureStream();
       previewVideo.srcObject = canvasStream;
+      setCanvasMediaStreamState(canvasStream);
     }
   }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
 
@@ -301,8 +305,12 @@ export const useBodyPix = () => {
     if (mediaStreamState) {
       stopVideoTrack(mediaStreamState);
     }
+    if (canvasMediaStreamState) {
+      stopVideoTrack(canvasMediaStreamState);
+    }
 
     setMediaStream(null);
+    setCanvasMediaStreamState(null);
 
     const video = videoRef.current;
     if (video) {
@@ -460,6 +468,7 @@ export const useBodyPix = () => {
     canvasRef,
     previewVideoRef,
     loading,
+    canvasMediaStreamState,
     hasMediaStream,
     effectTypeState,
     architecture,
