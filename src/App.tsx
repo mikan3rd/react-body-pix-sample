@@ -143,7 +143,6 @@ const App: React.VFC = () => {
             /* width: ${width}px;
             height: ${height}px; */
             margin-top: 8px;
-            object-fit: cover;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
@@ -158,6 +157,7 @@ const App: React.VFC = () => {
               /* position: absolute;
               top: 0;
               left: 0; */
+              object-fit: cover;
             `}
           />
           <canvas

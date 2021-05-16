@@ -267,6 +267,8 @@ export const useBodyPix = () => {
         deviceId: videoDeviceId,
         width,
         height,
+        facingMode: "user",
+        aspectRatio: 1,
       },
       audio: {
         deviceId: audioDeviceId,
