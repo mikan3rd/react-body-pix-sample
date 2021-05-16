@@ -34,6 +34,8 @@ export const useBodyPix = () => {
   const [mediaStreamState, setMediaStreamState] = useState<MediaStream | null>(null);
   const mediaStreamRef = useRef(mediaStreamState);
 
+  const [canvasMediaStreamState, setCanvasMediaStreamState] = useState<MediaStream | null>(null);
+
   const [effectTypeState, setEffectTypeState] = useState<EffectType>("off");
   const effectTypeRef = useRef(effectTypeState);
 
@@ -280,15 +282,6 @@ export const useBodyPix = () => {
     }
 
     setMediaStream(mediaStream);
-    // mediaStream.getVideoTracks().forEach((track) => {
-    //   const { width, height } = track.getSettings();
-    //   if (width) {
-    //     setWidth(width);
-    //   }
-    //   if (height) {
-    //     setHeight(height);
-    //   }
-    // });
 
     const video = videoRef.current;
     if (video) {
@@ -304,6 +297,7 @@ export const useBodyPix = () => {
     if (canvas && previewVideo) {
       const canvasStream = canvas.captureStream();
       previewVideo.srcObject = canvasStream;
+      setCanvasMediaStreamState(canvasStream);
     }
   }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
 
@@ -311,8 +305,12 @@ export const useBodyPix = () => {
     if (mediaStreamState) {
       stopVideoTrack(mediaStreamState);
     }
+    if (canvasMediaStreamState) {
+      stopVideoTrack(canvasMediaStreamState);
+    }
 
     setMediaStream(null);
+    setCanvasMediaStreamState(null);
 
     const video = videoRef.current;
     if (video) {
@@ -470,7 +468,7 @@ export const useBodyPix = () => {
     canvasRef,
     previewVideoRef,
     loading,
-    mediaStreamState,
+    canvasMediaStreamState,
     hasMediaStream,
     effectTypeState,
     architecture,
