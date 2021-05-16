@@ -151,7 +151,7 @@ export const useBodyPix = () => {
     }
   };
 
-  const drawBokeh = async () => {
+  const drawBokeh = useCallback(async () => {
     const segmentation = await segmentPerson();
 
     const video = videoRef.current;
@@ -166,9 +166,9 @@ export const useBodyPix = () => {
         flipHorizontalRef.current,
       );
     }
-  };
+  }, []);
 
-  const drawMask = async () => {
+  const drawMask = useCallback(async () => {
     const segmentation = await segmentPerson();
 
     const video = videoRef.current;
@@ -188,9 +188,9 @@ export const useBodyPix = () => {
         flipHorizontalRef.current,
       );
     }
-  };
+  }, []);
 
-  const renderCanvas = async () => {
+  const renderCanvas = useCallback(async () => {
     // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
     // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
     if (mediaStreamRef.current === null) {
@@ -217,14 +217,19 @@ export const useBodyPix = () => {
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(renderCanvas);
-  };
+  }, [drawBokeh, drawMask]);
 
   const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("Browser API navigator.mediaDevices.getUserMedia not available");
       return;
     }
-    return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    try {
+      return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    } catch (e) {
+      alert(e);
+      return;
+    }
   };
 
   const stopVideoTrack = (mediaStream: MediaStream) => {
@@ -249,20 +254,23 @@ export const useBodyPix = () => {
     setDevices(nextDevices);
   }, []);
 
-  const setMediaStream = (mediaStream: typeof mediaStreamState) => {
+  const setMediaStream = useCallback((mediaStream: typeof mediaStreamState) => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
-  };
+  }, []);
 
-  const startVideo = async () => {
+  const startVideo = useCallback(async () => {
     setLoading(true);
 
     const mediaStream = await getUserMedia({
       video: {
         width,
         height,
+        deviceId: videoDeviceId,
       },
-      audio: false, // TODO
+      audio: {
+        deviceId: audioDeviceId,
+      },
     });
 
     if (!mediaStream) {
@@ -287,7 +295,7 @@ export const useBodyPix = () => {
       const canvasStream = canvas.captureStream();
       previewVideo.srcObject = canvasStream;
     }
-  };
+  }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
 
   const stopVideo = () => {
     if (mediaStreamState) {
@@ -396,6 +404,7 @@ export const useBodyPix = () => {
     setMaskBlurAmountState(maskBlurAmount);
   };
 
+  // bodyPix.load() の引数が変わった時に再実行する
   useEffect(() => {
     if (isMountedRef.current) {
       loadBodyPix();
@@ -423,7 +432,6 @@ export const useBodyPix = () => {
 
   useEffect(() => {
     if (!videoDeviceId && videoDevices.length > 0) {
-      console.log(videoDevices[0].deviceId);
       setVideoDeviceId(videoDevices[0].deviceId);
     }
   }, [videoDeviceId, videoDevices]);
@@ -433,6 +441,13 @@ export const useBodyPix = () => {
       setAudioDeviceId(audioDevices[0].deviceId);
     }
   }, [audioDeviceId, audioDevices]);
+
+  // videoDeviceId, audioDeviceId が変更された時に MediaStream を再生成する
+  useEffect(() => {
+    if (hasMediaStream) {
+      startVideo();
+    }
+  }, [videoDeviceId, audioDeviceId, hasMediaStream, startVideo]);
 
   return {
     width,
