@@ -18,8 +18,8 @@ export const useBodyPix = () => {
   const [videoDeviceId, setVideoDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
   const [audioDeviceId, setAudioDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
 
-  const [width, setWidth] = useState(160);
-  const [height, setHeight] = useState(120);
+  const [width] = useState(160);
+  const [height] = useState(120);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -304,7 +304,7 @@ export const useBodyPix = () => {
       const canvasStream = canvas.captureStream();
       previewVideo.srcObject = canvasStream;
     }
-  }, [audioDeviceId, renderCanvas, setMediaStream, videoDeviceId]);
+  }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
 
   const stopVideo = () => {
     if (mediaStreamState) {
