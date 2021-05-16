@@ -20,6 +20,10 @@ const App: React.VFC = () => {
   const {
     width,
     height,
+    videoDeviceId,
+    audioDeviceId,
+    videoDeviceOptions,
+    audioDeviceOptions,
     videoRef,
     canvasRef,
     previewVideoRef,
@@ -44,6 +48,8 @@ const App: React.VFC = () => {
     foregroundColorValue,
     opacityState,
     maskBlurAmountState,
+    setVideoDeviceId,
+    setAudioDeviceId,
     startVideo,
     stopVideo,
     handleChangeEffectType,
@@ -90,15 +96,44 @@ const App: React.VFC = () => {
           }
         `}
       >
+        <Dropdown
+          labeled
+          button
+          className="icon"
+          icon="video"
+          value={videoDeviceId}
+          options={videoDeviceOptions}
+          onChange={async (e, d) => setVideoDeviceId(d.value as string)}
+          css={css`
+            &&& {
+              display: block;
+            }
+          `}
+        />
+        <Dropdown
+          labeled
+          button
+          className="icon"
+          icon="microphone"
+          value={audioDeviceId}
+          options={audioDeviceOptions}
+          onChange={async (e, d) => setAudioDeviceId(d.value as string)}
+          css={css`
+            &&& {
+              display: block;
+              margin-top: 8px;
+            }
+          `}
+        />
         <Checkbox
           toggle
           checked={hasMediaStream}
-          label="Video"
+          label="Display Video"
           onChange={handleToggleVideo}
           css={css`
             &&& {
               display: block;
-              margin-bottom: 12px;
+              margin-top: 8px;
             }
           `}
         />
@@ -107,6 +142,7 @@ const App: React.VFC = () => {
             position: relative;
             /* width: ${width}px;
             height: ${height}px; */
+            margin-top: 8px;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}

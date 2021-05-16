@@ -12,12 +12,14 @@ type ModelConfig = NonNullable<Parameters<typeof bodyPix.load>[0]>;
 type EffectType = "off" | "bokeh" | "colorMask";
 
 export const useBodyPix = () => {
-  const [width] = useState(160);
-  const [height] = useState(120);
+  const isMountedRef = useRef(false);
 
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoDeviceId, setVideoDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
+  const [audioDeviceId, setAudioDeviceId] = useState<MediaDeviceInfo["deviceId"] | undefined>(undefined);
 
-  const isMountedRef = useRef(false);
+  const [width] = useState(160);
+  const [height] = useState(120);
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -85,6 +87,19 @@ export const useBodyPix = () => {
 
   const hasMediaStream = useMemo(() => mediaStreamState !== null, [mediaStreamState]);
 
+  const videoDevices = useMemo(() => devices.filter((device) => device.kind === "videoinput"), [devices]);
+  const audioDevices = useMemo(() => devices.filter((device) => device.kind === "audioinput"), [devices]);
+
+  const videoDeviceOptions = useMemo(
+    () => videoDevices.map((device) => ({ value: device.deviceId, text: device.label })),
+    [videoDevices],
+  );
+
+  const audioDeviceOptions = useMemo(
+    () => audioDevices.map((device) => ({ value: device.deviceId, text: device.label })),
+    [audioDevices],
+  );
+
   const architectureOptions: { text: typeof architecture; value: typeof architecture }[] = useMemo(
     () => [
       { value: "ResNet50", text: "ResNet50" },
@@ -136,7 +151,7 @@ export const useBodyPix = () => {
     }
   };
 
-  const drawBokeh = async () => {
+  const drawBokeh = useCallback(async () => {
     const segmentation = await segmentPerson();
 
     const video = videoRef.current;
@@ -151,9 +166,9 @@ export const useBodyPix = () => {
         flipHorizontalRef.current,
       );
     }
-  };
+  }, []);
 
-  const drawMask = async () => {
+  const drawMask = useCallback(async () => {
     const segmentation = await segmentPerson();
 
     const video = videoRef.current;
@@ -173,9 +188,9 @@ export const useBodyPix = () => {
         flipHorizontalRef.current,
       );
     }
-  };
+  }, []);
 
-  const renderCanvas = async () => {
+  const renderCanvas = useCallback(async () => {
     // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
     // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
     if (mediaStreamRef.current === null) {
@@ -202,14 +217,19 @@ export const useBodyPix = () => {
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(renderCanvas);
-  };
+  }, [drawBokeh, drawMask]);
 
   const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       alert("Browser API navigator.mediaDevices.getUserMedia not available");
       return;
     }
-    return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    try {
+      return await navigator.mediaDevices.getUserMedia(mediaStreamConstraints);
+    } catch (e) {
+      alert(e);
+      return;
+    }
   };
 
   const stopVideoTrack = (mediaStream: MediaStream) => {
@@ -232,23 +252,25 @@ export const useBodyPix = () => {
 
     const nextDevices = await navigator.mediaDevices.enumerateDevices();
     setDevices(nextDevices);
-    console.log(nextDevices); // TODO
   }, []);
 
-  const setMediaStream = (mediaStream: typeof mediaStreamState) => {
+  const setMediaStream = useCallback((mediaStream: typeof mediaStreamState) => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
-  };
+  }, []);
 
-  const startVideo = async () => {
+  const startVideo = useCallback(async () => {
     setLoading(true);
 
     const mediaStream = await getUserMedia({
       video: {
         width,
         height,
+        deviceId: videoDeviceId,
       },
-      audio: false, // TODO
+      audio: {
+        deviceId: audioDeviceId,
+      },
     });
 
     if (!mediaStream) {
@@ -271,10 +293,9 @@ export const useBodyPix = () => {
     const previewVideo = previewVideoRef.current;
     if (canvas && previewVideo) {
       const canvasStream = canvas.captureStream();
-      console.log({ canvasStream });
       previewVideo.srcObject = canvasStream;
     }
-  };
+  }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
 
   const stopVideo = () => {
     if (mediaStreamState) {
@@ -383,6 +404,7 @@ export const useBodyPix = () => {
     setMaskBlurAmountState(maskBlurAmount);
   };
 
+  // bodyPix.load() の引数が変わった時に再実行する
   useEffect(() => {
     if (isMountedRef.current) {
       loadBodyPix();
@@ -408,10 +430,32 @@ export const useBodyPix = () => {
     };
   }, [setCurrentDevices]);
 
+  useEffect(() => {
+    if (!videoDeviceId && videoDevices.length > 0) {
+      setVideoDeviceId(videoDevices[0].deviceId);
+    }
+  }, [videoDeviceId, videoDevices]);
+
+  useEffect(() => {
+    if (!audioDeviceId && audioDevices.length > 0) {
+      setAudioDeviceId(audioDevices[0].deviceId);
+    }
+  }, [audioDeviceId, audioDevices]);
+
+  // videoDeviceId, audioDeviceId が変更された時に MediaStream を再生成する
+  useEffect(() => {
+    if (hasMediaStream) {
+      startVideo();
+    }
+  }, [videoDeviceId, audioDeviceId, hasMediaStream, startVideo]);
+
   return {
     width,
     height,
-    devices,
+    videoDeviceId,
+    audioDeviceId,
+    videoDeviceOptions,
+    audioDeviceOptions,
     videoRef,
     canvasRef,
     previewVideoRef,
@@ -436,6 +480,8 @@ export const useBodyPix = () => {
     foregroundColorValue,
     opacityState,
     maskBlurAmountState,
+    setVideoDeviceId,
+    setAudioDeviceId,
     startVideo,
     stopVideo,
     handleChangeArchitecture,
