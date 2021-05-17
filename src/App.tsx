@@ -191,7 +191,7 @@ const App: React.VFC = () => {
               /* position: absolute;
               top: 0;
               left: 0; */
-              object-fit: cover;
+              /* object-fit: cover; */
             `}
           />
           <canvas
