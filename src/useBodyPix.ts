@@ -144,14 +144,14 @@ export const useBodyPix = () => {
     }
   };
 
-  const drawNormal = () => {
+  const drawNormal = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (video) {
-      ctx?.drawImage(video, 0, 0);
+      ctx?.drawImage(video, 0, 0, width, height);
     }
-  };
+  }, [height, width]);
 
   const drawBokeh = useCallback(async () => {
     const segmentation = await segmentPerson();
@@ -219,7 +219,7 @@ export const useBodyPix = () => {
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(renderCanvas);
-  }, [drawBokeh, drawMask]);
+  }, [drawBokeh, drawMask, drawNormal]);
 
   const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
