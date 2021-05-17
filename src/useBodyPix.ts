@@ -234,9 +234,9 @@ export const useBodyPix = () => {
     }
   };
 
-  const stopVideoTrack = (mediaStream: MediaStream) => {
+  const stopVideoTrack = useCallback((mediaStream: MediaStream) => {
     mediaStream.getTracks().forEach((track) => track.stop());
-  };
+  }, []);
 
   const requestDevicePermission = useCallback(async () => {
     const mediaStream = await getUserMedia({ video: true, audio: true });
@@ -244,7 +244,7 @@ export const useBodyPix = () => {
       return;
     }
     stopVideoTrack(mediaStream);
-  }, []);
+  }, [stopVideoTrack]);
 
   const setCurrentDevices = useCallback(async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
@@ -260,6 +260,23 @@ export const useBodyPix = () => {
     mediaStreamRef.current = mediaStream;
     setMediaStreamState(mediaStream);
   }, []);
+
+  const stopVideo = useCallback(() => {
+    if (mediaStreamState) {
+      stopVideoTrack(mediaStreamState);
+    }
+    if (canvasMediaStreamState) {
+      stopVideoTrack(canvasMediaStreamState);
+    }
+
+    setMediaStream(null);
+    setCanvasMediaStreamState(null);
+
+    const video = videoRef.current;
+    if (video) {
+      video.onloadeddata = null;
+    }
+  }, [canvasMediaStreamState, mediaStreamState, setMediaStream, stopVideoTrack]);
 
   const startVideo = useCallback(async () => {
     setLoading(true);
@@ -282,6 +299,11 @@ export const useBodyPix = () => {
       return;
     }
 
+    if (mediaStreamState) {
+      // stopVideo() にすると hasMediaStream が変更されて useEffect() が発生するため
+      stopVideoTrack(mediaStreamState);
+    }
+
     setMediaStream(mediaStream);
 
     const video = videoRef.current;
@@ -300,24 +322,7 @@ export const useBodyPix = () => {
       previewVideo.srcObject = canvasStream;
       setCanvasMediaStreamState(canvasStream);
     }
-  }, [audioDeviceId, height, renderCanvas, setMediaStream, videoDeviceId, width]);
-
-  const stopVideo = () => {
-    if (mediaStreamState) {
-      stopVideoTrack(mediaStreamState);
-    }
-    if (canvasMediaStreamState) {
-      stopVideoTrack(canvasMediaStreamState);
-    }
-
-    setMediaStream(null);
-    setCanvasMediaStreamState(null);
-
-    const video = videoRef.current;
-    if (video) {
-      video.onloadeddata = null;
-    }
-  };
+  }, [audioDeviceId, height, mediaStreamState, renderCanvas, setMediaStream, stopVideoTrack, videoDeviceId, width]);
 
   const setEffectType = (effectType: typeof effectTypeState) => {
     effectTypeRef.current = effectType;
@@ -456,7 +461,8 @@ export const useBodyPix = () => {
     if (hasMediaStream) {
       startVideo();
     }
-  }, [videoDeviceId, audioDeviceId, hasMediaStream, startVideo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoDeviceId, audioDeviceId, hasMediaStream]);
 
   return {
     width,
