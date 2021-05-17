@@ -102,16 +102,7 @@ const App: React.VFC = () => {
         }
       `}
     >
-      <Segment
-        css={css`
-          &&& {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background-color: white;
-          }
-        `}
-      >
+      <Segment>
         <Dropdown
           labeled
           button
@@ -153,25 +144,38 @@ const App: React.VFC = () => {
             }
           `}
         />
-        <Checkbox
-          toggle
-          checked={isRecording}
-          disabled={!canRecord || !hasMediaStream}
-          label="Record Video"
-          onChange={handleToggleMediaRecord}
-          css={css`
-            &&& {
-              display: block;
-              margin-top: 8px;
-            }
-          `}
-        />
+        {canRecord && (
+          <Checkbox
+            toggle
+            checked={isRecording}
+            disabled={!hasMediaStream}
+            label="Record Video"
+            onChange={handleToggleMediaRecord}
+            css={css`
+              &&& {
+                display: block;
+                margin-top: 8px;
+              }
+            `}
+          />
+        )}
+      </Segment>
+
+      <Segment
+        css={css`
+          &&& {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+          }
+        `}
+      >
         <div
           css={css`
             position: relative;
             width: ${width}px;
             height: ${height}px;
-            margin-top: 8px;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
