@@ -71,7 +71,7 @@ const App: React.VFC = () => {
     handleChangeMaskBlurAmount,
   } = useBodyPix();
 
-  const { isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
+  const { canRecord, isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
 
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
@@ -102,16 +102,7 @@ const App: React.VFC = () => {
         }
       `}
     >
-      <Segment
-        css={css`
-          &&& {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background-color: white;
-          }
-        `}
-      >
+      <Segment>
         <Dropdown
           labeled
           button
@@ -153,25 +144,38 @@ const App: React.VFC = () => {
             }
           `}
         />
-        <Checkbox
-          toggle
-          checked={isRecording}
-          disabled={!hasMediaStream}
-          label="Record Video"
-          onChange={handleToggleMediaRecord}
-          css={css`
-            &&& {
-              display: block;
-              margin-top: 8px;
-            }
-          `}
-        />
+        {canRecord && (
+          <Checkbox
+            toggle
+            checked={isRecording}
+            disabled={!hasMediaStream}
+            label="Record Video"
+            onChange={handleToggleMediaRecord}
+            css={css`
+              &&& {
+                display: block;
+                margin-top: 8px;
+              }
+            `}
+          />
+        )}
+      </Segment>
+
+      <Segment
+        css={css`
+          &&& {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+          }
+        `}
+      >
         <div
           css={css`
             position: relative;
             width: ${width}px;
             height: ${height}px;
-            margin-top: 8px;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
@@ -217,114 +221,6 @@ const App: React.VFC = () => {
         <Dimmer active={loading}>
           <Loader />
         </Dimmer>
-      </Segment>
-
-      <Segment>
-        <Header content="BodyPix Setting" />
-        <Table celled striped unstackable>
-          <Table.Body>
-            <Table.Row>
-              <Table.Cell>architecture</Table.Cell>
-              <Table.Cell>
-                <Dropdown
-                  selection
-                  compact
-                  value={architecture}
-                  options={architectureOptions}
-                  onChange={async (e, d) => await handleChangeArchitecture(d.value as typeof architecture)}
-                />
-              </Table.Cell>
-            </Table.Row>
-
-            <Table.Row>
-              <Table.Cell>quantBytes</Table.Cell>
-              <Table.Cell>
-                <Dropdown
-                  selection
-                  compact
-                  value={quantBytes}
-                  options={quantBytesOptions}
-                  onChange={async (e, d) => await handleChangeQuantBytes(d.value as typeof quantBytes)}
-                />
-              </Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table>
-      </Segment>
-
-      <Segment>
-        <Header content="Segment Setting" />
-        <Table celled striped unstackable>
-          <Table.Body>
-            <Table.Row>
-              <Table.Cell>internalResolution</Table.Cell>
-              <Table.Cell>
-                <Input
-                  type="number"
-                  min={0}
-                  max={1}
-                  step="0.05"
-                  value={internalResolutionState}
-                  onChange={(e) => handleChangeInternalResolution(Number(e.target.value))}
-                />
-              </Table.Cell>
-            </Table.Row>
-
-            <Table.Row>
-              <Table.Cell>segmentationThreshold</Table.Cell>
-              <Table.Cell>
-                <Input
-                  type="number"
-                  min={0}
-                  max={1}
-                  step="0.05"
-                  value={segmentationThresholdState}
-                  onChange={(e) => handleChangeSegmentationThreshold(Number(e.target.value))}
-                />
-              </Table.Cell>
-            </Table.Row>
-
-            <Table.Row>
-              <Table.Cell>maxDetections</Table.Cell>
-              <Table.Cell>
-                <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={maxDetectionsState}
-                  onChange={(e) => handleChangeMaxDetections(Number(e.target.value))}
-                />
-              </Table.Cell>
-            </Table.Row>
-
-            <Table.Row>
-              <Table.Cell>scoreThreshold</Table.Cell>
-              <Table.Cell>
-                <Input
-                  type="number"
-                  min={0}
-                  max={1}
-                  step="0.05"
-                  value={scoreThresholdState}
-                  onChange={(e) => handleChangeScoreThreshold(Number(e.target.value))}
-                />
-              </Table.Cell>
-            </Table.Row>
-
-            <Table.Row>
-              <Table.Cell>nmsRadius</Table.Cell>
-              <Table.Cell>
-                <Input
-                  type="number"
-                  min={1}
-                  max={40}
-                  value={nmsRadiusState}
-                  onChange={(e) => handleChangeNmsRadius(Number(e.target.value))}
-                />
-              </Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        </Table>
       </Segment>
 
       <Segment>
@@ -502,6 +398,114 @@ const App: React.VFC = () => {
             </Table>
           )}
         </div>
+      </Segment>
+
+      <Segment>
+        <Header content="BodyPix Setting" />
+        <Table celled striped unstackable>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>architecture</Table.Cell>
+              <Table.Cell>
+                <Dropdown
+                  selection
+                  compact
+                  value={architecture}
+                  options={architectureOptions}
+                  onChange={async (e, d) => await handleChangeArchitecture(d.value as typeof architecture)}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>quantBytes</Table.Cell>
+              <Table.Cell>
+                <Dropdown
+                  selection
+                  compact
+                  value={quantBytes}
+                  options={quantBytesOptions}
+                  onChange={async (e, d) => await handleChangeQuantBytes(d.value as typeof quantBytes)}
+                />
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
+      </Segment>
+
+      <Segment>
+        <Header content="Segment Setting" />
+        <Table celled striped unstackable>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>internalResolution</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={internalResolutionState}
+                  onChange={(e) => handleChangeInternalResolution(Number(e.target.value))}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>segmentationThreshold</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={segmentationThresholdState}
+                  onChange={(e) => handleChangeSegmentationThreshold(Number(e.target.value))}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>maxDetections</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={maxDetectionsState}
+                  onChange={(e) => handleChangeMaxDetections(Number(e.target.value))}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>scoreThreshold</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step="0.05"
+                  value={scoreThresholdState}
+                  onChange={(e) => handleChangeScoreThreshold(Number(e.target.value))}
+                />
+              </Table.Cell>
+            </Table.Row>
+
+            <Table.Row>
+              <Table.Cell>nmsRadius</Table.Cell>
+              <Table.Cell>
+                <Input
+                  type="number"
+                  min={1}
+                  max={40}
+                  value={nmsRadiusState}
+                  onChange={(e) => handleChangeNmsRadius(Number(e.target.value))}
+                />
+              </Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>
       </Segment>
     </Container>
   );

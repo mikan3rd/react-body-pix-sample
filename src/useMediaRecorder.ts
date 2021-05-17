@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 
 export const useMediaRecorder = () => {
-  const mymeType = "video/webm";
+  const mimeType = "video/webm";
 
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
 
   const download = useCallback((chunks: Blob[], fileName: string) => {
     const blob = new Blob(chunks, {
-      type: mymeType,
+      type: mimeType,
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -22,7 +22,7 @@ export const useMediaRecorder = () => {
   const startMediaRecord = useCallback(
     (stream: MediaStream) => {
       const recorder = new MediaRecorder(stream, {
-        mimeType: mymeType,
+        mimeType: mimeType,
       });
 
       const chunks: Blob[] = [];
@@ -53,6 +53,7 @@ export const useMediaRecorder = () => {
   }, [mediaRecorder]);
 
   const isRecording = useMemo(() => mediaRecorder !== null, [mediaRecorder]);
+  const canRecord = useMemo(() => MediaRecorder.isTypeSupported(mimeType), []);
 
-  return { isRecording, startMediaRecord, stopMediaRecord };
+  return { canRecord, isRecording, startMediaRecord, stopMediaRecord };
 };
