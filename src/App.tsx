@@ -16,6 +16,7 @@ import {
 
 import { useBodyPix } from "./useBodyPix";
 import { useMediaRecorder } from "./useMediaRecorder";
+import { useScreenShare } from "./useScreehShare";
 
 const App: React.VFC = () => {
   const {
@@ -73,6 +74,8 @@ const App: React.VFC = () => {
 
   const { canRecord, isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
 
+  const { hasDisplayMediaStream, screenShareVideoRef, startScreenShare, stopScreenShare } = useScreenShare();
+
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
       stopVideo();
@@ -90,6 +93,14 @@ const App: React.VFC = () => {
       } else {
         alert("Please start video");
       }
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    if (hasDisplayMediaStream) {
+      stopScreenShare();
+    } else {
+      await startScreenShare();
     }
   };
 
@@ -159,6 +170,19 @@ const App: React.VFC = () => {
             `}
           />
         )}
+
+        <Checkbox
+          toggle
+          checked={hasDisplayMediaStream}
+          label="Screen Share"
+          onChange={handleToggleScreenShare}
+          css={css`
+            &&& {
+              display: block;
+              margin-top: 8px;
+            }
+          `}
+        />
       </Segment>
 
       <Segment
@@ -221,6 +245,18 @@ const App: React.VFC = () => {
         <Dimmer active={loading}>
           <Loader />
         </Dimmer>
+      </Segment>
+
+      <Segment>
+        <video
+          ref={screenShareVideoRef}
+          autoPlay
+          muted
+          playsInline
+          css={css`
+            width: 100%;
+          `}
+        />
       </Segment>
 
       <Segment>
