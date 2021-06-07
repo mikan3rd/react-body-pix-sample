@@ -186,6 +186,7 @@ const App: React.VFC = () => {
       </Segment>
 
       <Segment
+        hidden={hasDisplayMediaStream || !hasMediaStream}
         css={css`
           &&& {
             position: sticky;
@@ -247,7 +248,7 @@ const App: React.VFC = () => {
         </Dimmer>
       </Segment>
 
-      <Segment>
+      <Segment hidden={!hasDisplayMediaStream}>
         <video
           ref={screenShareVideoRef}
           autoPlay
