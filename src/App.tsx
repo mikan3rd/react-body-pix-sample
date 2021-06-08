@@ -195,7 +195,7 @@ const App: React.VFC = () => {
         <Checkbox
           toggle
           checked={hasDisplayMediaStream}
-          label="Screen Share"
+          label="Display Screen Share"
           onChange={handleToggleScreenShare}
           css={css`
             &&& {
