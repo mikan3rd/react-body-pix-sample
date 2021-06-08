@@ -1,5 +1,5 @@
 import { css } from "@emotion/react";
-import React from "react";
+import React, { useCallback } from "react";
 import { AlphaPicker, CompactPicker } from "react-color";
 import {
   Checkbox,
@@ -74,7 +74,14 @@ const App: React.VFC = () => {
 
   const { canRecord, isRecording, startMediaRecord, stopMediaRecord } = useMediaRecorder();
 
-  const { hasDisplayMediaStream, screenShareVideoRef, startScreenShare, stopScreenShare } = useScreenShare();
+  const { hasDisplayMediaStream, displayMediaStream, screenShareVideoRef, startScreenShare, stopScreenShare } =
+    useScreenShare();
+  const {
+    canRecord: canScreenShareRecord,
+    isRecording: isScreenShareRecording,
+    startMediaRecord: startScreenShareRecord,
+    stopMediaRecord: stopScreenShareRedord,
+  } = useMediaRecorder();
 
   const handleToggleVideo = async () => {
     if (hasMediaStream) {
@@ -96,13 +103,25 @@ const App: React.VFC = () => {
     }
   };
 
-  const handleToggleScreenShare = async () => {
+  const handleToggleScreenShare = useCallback(async () => {
     if (hasDisplayMediaStream) {
       stopScreenShare();
     } else {
       await startScreenShare();
     }
-  };
+  }, [hasDisplayMediaStream, startScreenShare, stopScreenShare]);
+
+  const handleToggleScreenShareRecord = useCallback(() => {
+    if (isScreenShareRecording) {
+      stopScreenShareRedord();
+    } else {
+      if (displayMediaStream) {
+        startScreenShareRecord(displayMediaStream);
+      } else {
+        alert("Please start video");
+      }
+    }
+  }, [displayMediaStream, isScreenShareRecording, startScreenShareRecord, stopScreenShareRedord]);
 
   return (
     <Container
@@ -143,6 +162,7 @@ const App: React.VFC = () => {
             }
           `}
         />
+        <Divider />
         <Checkbox
           toggle
           checked={hasMediaStream}
@@ -171,6 +191,7 @@ const App: React.VFC = () => {
           />
         )}
 
+        <Divider />
         <Checkbox
           toggle
           checked={hasDisplayMediaStream}
@@ -183,6 +204,21 @@ const App: React.VFC = () => {
             }
           `}
         />
+        {canScreenShareRecord && (
+          <Checkbox
+            toggle
+            checked={isScreenShareRecording}
+            disabled={!hasDisplayMediaStream}
+            label="Record ScreenShare"
+            onChange={handleToggleScreenShareRecord}
+            css={css`
+              &&& {
+                display: block;
+                margin-top: 8px;
+              }
+            `}
+          />
+        )}
       </Segment>
 
       <Segment
@@ -248,7 +284,17 @@ const App: React.VFC = () => {
         </Dimmer>
       </Segment>
 
-      <Segment hidden={!hasDisplayMediaStream}>
+      <Segment
+        hidden={!hasDisplayMediaStream}
+        css={css`
+          &&& {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: white;
+          }
+        `}
+      >
         <video
           ref={screenShareVideoRef}
           autoPlay

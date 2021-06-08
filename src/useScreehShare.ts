@@ -47,6 +47,7 @@ export const useScreenShare = () => {
 
   return {
     hasDisplayMediaStream,
+    displayMediaStream,
     screenShareVideoRef,
     startScreenShare,
     stopScreenShare,
