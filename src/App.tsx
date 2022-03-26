@@ -235,8 +235,9 @@ const App: React.VFC = () => {
         <div
           css={css`
             position: relative;
-            width: ${width}px;
-            height: ${height}px;
+            /* width: ${width}px;
+            height: ${height}px; */
+            margin-top: 8px;
           `}
         >
           {/* iOSの場合にhiddenなどの非表示要素だとvideoを再生できないため */}
@@ -248,9 +249,10 @@ const App: React.VFC = () => {
             muted
             playsInline
             css={css`
-              position: absolute;
+              /* position: absolute;
               top: 0;
-              left: 0;
+              left: 0; */
+              /* object-fit: cover; */
             `}
           />
           <canvas
@@ -258,9 +260,9 @@ const App: React.VFC = () => {
             width={width}
             height={height}
             css={css`
-              position: absolute;
+              /* position: absolute;
               top: 0;
-              left: 0;
+              left: 0; */
             `}
           />
           <video
@@ -272,9 +274,9 @@ const App: React.VFC = () => {
             playsInline
             hidden
             css={css`
-              position: absolute;
+              /* position: absolute;
               top: 0;
-              left: 0;
+              left: 0; */
             `}
           />
         </div>

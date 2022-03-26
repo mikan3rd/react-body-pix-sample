@@ -144,14 +144,39 @@ export const useBodyPix = () => {
     }
   };
 
-  const drawNormal = () => {
+  const drawNothing = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    ctx?.fillRect(0, 0, width, height);
+  }, [height, width]);
+
+  const drawNormal = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    if (video) {
-      ctx?.drawImage(video, 0, 0);
+    if (video && canvas) {
+      // canvas要素全体にfitするように拡大
+      const { width, height } = canvas;
+      const { videoWidth, videoHeight } = video;
+      const hRatio = width / videoWidth;
+      const vRatio = height / videoHeight;
+      const ratio = Math.max(hRatio, vRatio);
+      const centerShiftX = (width - videoWidth * ratio) / 2;
+      const centerShiftY = (height - videoHeight * ratio) / 2;
+      ctx?.clearRect(0, 0, width, height);
+      ctx?.drawImage(
+        video,
+        0,
+        0,
+        videoWidth,
+        videoHeight,
+        centerShiftX,
+        centerShiftY,
+        videoWidth * ratio,
+        videoHeight * ratio,
+      );
     }
-  };
+  }, []);
 
   const drawBokeh = useCallback(async () => {
     const segmentation = await segmentPerson();
@@ -196,6 +221,7 @@ export const useBodyPix = () => {
     // cancelAnimationFrame(requestID)だとrequestIDを参照している間に
     // 次のrequestIDが発行されて動き続ける場合があるのでここで止められる制御を入れている
     if (mediaStreamRef.current === null) {
+      drawNothing();
       return;
     }
 
@@ -219,7 +245,7 @@ export const useBodyPix = () => {
     // requestAnimationFrame()だとChromeでタブが非アクティブの場合に非常に遅くなってしまう
     // この場合にも対応したい場合はsetTimeoutを使用する
     requestAnimationFrame(renderCanvas);
-  }, [drawBokeh, drawMask]);
+  }, [drawNothing, drawBokeh, drawMask, drawNormal]);
 
   const getUserMedia = async (mediaStreamConstraints: MediaStreamConstraints) => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -286,7 +312,8 @@ export const useBodyPix = () => {
         deviceId: videoDeviceId,
         width,
         height,
-        aspectRatio: 1,
+        aspectRatio: width / height,
+        facingMode: "user",
       },
       audio: {
         deviceId: audioDeviceId,
