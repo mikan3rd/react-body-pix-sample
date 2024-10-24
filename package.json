@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "14"
+    "node": "20"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -36,7 +36,7 @@
     "@testing-library/user-event": "13.1.9",
     "@types/dom-mediacapture-record": "1.0.9",
     "@types/jest": "26.0.23",
-    "@types/node": "14.17.4",
+    "@types/node": "20.17.0",
     "@types/react": "17.0.13",
     "@types/react-color": "3.0.4",
     "@types/react-dom": "17.0.8",
