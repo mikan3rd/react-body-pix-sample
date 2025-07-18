@@ -5322,10 +5322,10 @@ eslint-plugin-jsx-a11y@^6.3.1:
     jsx-ast-utils "^3.1.0"
     language-tags "^1.0.5"
 
-eslint-plugin-prettier@3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-prettier/-/eslint-plugin-prettier-3.4.0.tgz#cdbad3bf1dbd2b177e9825737fe63b476a08f0c7"
-  integrity sha512-UDK6rJT6INSfcOo545jiaOwB701uAIt2/dR7WnFQoGCVl1/EMqdANBmwUaqqQ45aXprsTGzSa39LI1PyuRBxxw==
+eslint-plugin-prettier@4.2.4:
+  version "4.2.4"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-prettier/-/eslint-plugin-prettier-4.2.4.tgz#c4e1f72f9b609400192dc8675915263ea3114bbd"
+  integrity sha512-tnE3YiLrFuM40E1qH9+jUnJQJ7TU6cKqMXJFzk5p0edm+V2nC9ngqi8J7xyftSGY1sKUQYkCJVFGVV4zn3oAkQ==
   dependencies:
     prettier-linter-helpers "^1.0.0"
 
