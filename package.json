@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "14"
+    "node": "22"
   },
   "scripts": {
     "start": "react-app-rewired start",
